@@ -1,0 +1,39 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>LOWREZJAM 2021</title>
+  <style>
+    html, body {
+      margin: 0;
+      padding: 0;
+      font-family: monospace;
+    }
+
+    #game {
+      margin: 0 auto;
+      padding: 0;
+      width: 256px;
+      height: 256px;
+      max-width: 100%;
+    }
+
+    #game canvas {
+      border: 0;
+      margin: 0;
+      padding: 0;
+      image-rendering: crisp-edges;
+      image-rendering: pixelated;
+      width: 100%;
+    }
+
+    #sprites {
+      display: none;
+    }
+  </style>
+</head>
+<body>
+  <div id="game"></div>
+  <img id="sprites" src="sprites.png" />
+  <script src="game.min.js"></script>
+</body>
+</html>
