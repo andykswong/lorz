@@ -1,0 +1,27 @@
+{
+  "name": "1adunge0n",
+  "version": "1.0.0",
+  "private": "true",
+  "description": "LOWREZJAM 2021 Submission",
+  "scripts": {
+    "build": "webpack",
+    "start": "cross-env NODE_ENV=development webpack serve"
+  },
+  "author": "Andy K.S. Wong",
+  "license": "MIT",
+  "devDependencies": {
+    "@babel/preset-env": "^7.14.9",
+    "@babel/preset-typescript": "^7.14.5",
+    "babel-loader": "^8.2.2",
+    "copy-webpack-plugin": "^9.0.1",
+    "cross-env": "^7.0.3",
+    "source-map-loader": "^3.0.0",
+    "webpack": "^5.47.1",
+    "webpack-cli": "^4.7.2",
+    "webpack-dev-server": "^3.11.2"
+  },
+  "dependencies": {
+    "mugl": "^0.0.5",
+    "munum": "^0.0.5"
+  }
+}
