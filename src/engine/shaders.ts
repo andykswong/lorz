@@ -42,6 +42,9 @@ uniform sampler2D tex;
 void main () {
   vec2 uv = vec2((vQuad.x + vUv.x * vQuad.z) / texSize.x, (vQuad.y + vUv.y * vQuad.w) / texSize.y);
   vec4 color = texture2D(tex, uv);
+  if (color.a < 0.1) {
+    discard;
+  }
   gl_FragColor = vec4(mix(color.rgb, vColor.rgb, vColor.a), color.a);
 }
 `;

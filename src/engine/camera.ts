@@ -1,5 +1,4 @@
 import { Mat4, mat4, Vec3, vec3, ortho } from 'munum';
-import { HEIGHT, WIDTH } from '../config';
 
 const I4 = mat4.create();
 
@@ -38,8 +37,8 @@ export class Camera {
  */
  export class UICamera extends Camera {
   public constructor(
-    public width: number = WIDTH,
-    public height: number = HEIGHT,
+    public width: number = 64,
+    public height: number = 64,
     public znear: number = -100,
     public zfar: number = 100
   ) {
@@ -61,8 +60,8 @@ export class Camera {
  */
 export class OrthoCamera extends Camera {
   public constructor(
-    public width: number = WIDTH,
-    public height: number = HEIGHT
+    public width: number = 64,
+    public height: number = 64
   ) {
     super();
     this.updateProj();

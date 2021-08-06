@@ -1,5 +1,5 @@
 import { Game } from '../engine';
-import { HEIGHT, WIDTH } from '../config';
+import { HEIGHT, WIDTH } from './config';
 import { GameScreen } from './game';
 import { StartScreen } from './start';
 
