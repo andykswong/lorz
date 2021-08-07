@@ -93,10 +93,14 @@ export class UIRenderer {
   }
 
   public submitText(text: string, pos: ReadonlyVec2, color: ReadonlyColor, align: number = -1, scale: ReadonlyVec2 = [1, 1]): void {
-    tmpV2[0] = pos[0] + (align > 0 ? -(4 * text.length - 1) : 0);
+    let offset = 0;
+    for (let i = 0; i < text.length; ++i) {
+      offset += (text[i] == ' ') ? 1 : (3 + (i > 0 ? 1 : 0));
+    }
+    tmpV2[0] = pos[0] + (align > 0 ? -offset : 0);
     tmpV2[1] = pos[1];
     for (let i = 0; i < text.length; ++i, tmpV2[0] += 4 * scale[0]) {
-      if (text[i] == ' ') {
+      while (text[i] == ' ') {
         tmpV2[0] += scale[0];
         ++i;
       }

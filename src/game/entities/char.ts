@@ -15,6 +15,8 @@ export class Character implements Body, Entity {
   public hitbox: ReadonlyAABB = HitBoxChar;
   public sensors: ReadonlyAABB[] = [];
   public readonly maxHitPoint: number;
+  private blockedDamage: number = 0;
+  private shieldBroken: number = 0;
 
   public actions: Action = Action.None;
 
@@ -41,10 +43,11 @@ export class Character implements Body, Entity {
       return;
     }
 
-    this.sprite.isBlocking = !!(this._shield && (this.actions & Action.Block));
+    this.shieldBroken = Math.max(0, this.shieldBroken - t);
+    this.sprite.isBlocking = !this.shieldBroken && !!(this._shield && (this.actions & Action.Block));
 
     if (!this.sprite.isBlocking && !this.sprite.isHit && !this.sprite.isAttacking && (this.actions & Action.Attack)) {
-      this.sprite.attack();
+      this.sprite.attack(this.weapon?.speed);
       this.sensors.push(this._weapon?.hitbox || HitBoxWeaponSmall);
     }
 
@@ -80,20 +83,30 @@ export class Character implements Body, Entity {
     this.sprite.render(renderer, t);
   }
 
-  public damage(damage: number): boolean {
+  public damage(damage: number, frontAttack: boolean = true): boolean {
     if (this.hitpoint <= 0) {
       return false;
     }
-    if (this.sprite.isBlocking) {
+    let blocked = frontAttack && this.sprite.isBlocking;
+    if (blocked) {
       damage = Math.max(0, damage - (this._shield?.damage || 0));
+      this.blockedDamage += Math.min(damage, this._shield?.damage || 0);
+      if (this.blockedDamage >= (this._shield?.damage || 0) * 5) {
+        blocked = false;
+        this.shieldBroken = 1;
+        this.blockedDamage = 0;
+        this.sprite.isBlocking = false;
+      }
+    } else if (!frontAttack && this.sprite.isBlocking) {
+      this.shieldBroken = 0.5;
     }
     if ((this.hitpoint -= damage) <= 0) {
       this.sprite.isDead = true;
     }
-    if (damage) {
+    if (!blocked) {
       this.sprite.hit();
     }
-    return true;
+    return !blocked;
   }
 
   public get position(): Vec3 {

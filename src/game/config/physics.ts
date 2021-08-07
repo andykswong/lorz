@@ -9,3 +9,5 @@ export const HitBoxWeaponSmall: ReadonlyAABB = aabb.create([0, 2, -2], [4, 6, 2]
 export const HitBoxWeaponNormal: ReadonlyAABB = aabb.create([0, 2, -2], [6, 8, 2]);
 
 export const HitBoxWeaponLarge: ReadonlyAABB = aabb.create([0, 0, -4], [10, 8, 4]);
+
+export const HitBoxWeaponXLarge: ReadonlyAABB = aabb.create([0, 0, -4], [12, 8, 4]);

@@ -1,4 +1,4 @@
-# LOWREZJAM 2021 Game
+# DUNGEON OF LORZ - A LOWREZJAM 2021 Game
 A submission to LOWREZJAM 2021. A 64x64 side-scroll dungeon crawler.
 
 Made possible by:

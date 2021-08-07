@@ -47,7 +47,7 @@ export class CharacterSprite {
     this.cape && renderer.submit(this.cape, this.position, dir, this.alpha, color);
 
     const posWeapon = vec3.add(this.position, vec3.scale(WEAPON_OFFSET, dir, tmpV3), tmpV3);
-    this.weapon && renderer.submit(frame(this.weapon, this.isAttacking > 0.2 ? 1 : 0), posWeapon, dir, this.alpha, color);
+    this.weapon && renderer.submit(frame(this.weapon, this.isAttacking > 0.1 ? 1 : 0), posWeapon, dir, this.alpha, color);
     this.shield && renderer.submit(frame(this.shield, this.isBlocking ? 1 : 0), posWeapon, dir, this.alpha, color);
 
     this.isAttacking = Math.max(0, this.isAttacking - dt);
@@ -59,7 +59,7 @@ export class CharacterSprite {
     this.isHit = 0.5;
   }
 
-  public attack(): void {
-    this.isAttacking = 0.5;
+  public attack(speed: number = 0.5): void {
+    this.isAttacking = speed;
   }
 }

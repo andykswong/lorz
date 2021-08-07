@@ -11,6 +11,7 @@ export const Sound = {
   Coin: new Audio('./coin.wav'),
 } as const;
 
+Sound.Game.loop = true;
 Sound.Game.volume = 0.1;
 Sound.Victory.volume = 0.1;
 Sound.Lost.volume = 0.1;

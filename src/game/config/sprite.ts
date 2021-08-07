@@ -5,6 +5,11 @@ export let UISprite: Record<string, ReadonlyVec4> = {
   HPBG: [7, 32, 1, 2],
   MP: [8, 32, 8, 2],
   COIN: [16, 32, 5, 5],
+  LEFT: [24, 32, 4, 7],
+  RIGHT: [27, 32, 4, 7],
+  UP: [24, 32, 7, 4],
+  DOWN: [24, 35, 7, 4],
+  SELECT: [40, 32, 8, 8],
 
   A: [96, 32, 3, 5],
   K: [96, 37, 3, 5],
@@ -20,6 +25,10 @@ export let UISprite: Record<string, ReadonlyVec4> = {
   '7': [123, 42, 3, 5],
   '8': [120, 47, 3, 5],
   '9': [123, 47, 3, 5],
+  '-': [120, 52, 3, 5],
+  ':': [123, 52, 1, 5],
+  '!': [124, 52, 1, 5],
+  ';': [125, 52, 3, 5],
 }
 
 for (let c = 'A'.charCodeAt(0) + 1; c < 'K'.charCodeAt(0); ++c) {

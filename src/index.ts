@@ -1,5 +1,4 @@
-import { LaDungeonGame } from './game';
+import { LowRezJam2021Game } from './game';
 
-const game = new LaDungeonGame();
+const game = new LowRezJam2021Game();
 game.start();
-game.startGame();
