@@ -1,5 +1,5 @@
 import { RenderingDevice, RenderPass } from 'mugl';
-import { OrthoCamera, Screen } from '../engine';
+import { OrthoCamera, Screen } from '../core';
 import { LaDungeonGame } from './entry';
 
 export class StartScreen implements Screen {

@@ -1,7 +1,6 @@
-import { SpritesRenderer } from '../../engine';
-import { Action } from '../action';
+import { SpritesRenderer } from '../../core';
 
 export interface Entity {
-  update(action?: Action): void;
+  update(time: number): void;
   render(renderer: SpritesRenderer, time: number): void;
 }

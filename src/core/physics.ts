@@ -1,5 +1,5 @@
 import { aabb, AABB, clamp, mat4, Mat4, ReadonlyAABB, translate, vec3, Vec3 } from 'munum';
-import { MAX, MIN } from './config';
+import { MAX, MIN } from '../game/config';
 
 export interface Body {
   readonly position: Vec3;
@@ -8,6 +8,7 @@ export interface Body {
   readonly hitbox: ReadonlyAABB;
   readonly sensors: ReadonlyAABB[];
   readonly friction?: number;
+  readonly isDead: boolean;
 }
 
 const tmpV: Vec3 = vec3.create();
@@ -49,7 +50,7 @@ export function simulate(dt: number, bodies: Body[], hit?: (target: Body, by: Bo
   }
 }
 
-function intersect(a: ReadonlyAABB, b: ReadonlyAABB): boolean {
+export function intersect(a: ReadonlyAABB, b: ReadonlyAABB): boolean {
   for (let i = 0; i < 3; ++i) {
     if (a.min[i] > b.max[i] || b.min[i] > a.max[i]) {
       return false;

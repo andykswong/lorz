@@ -1,14 +1,17 @@
-import { BlendFactor, Buffer, CompareFunc, FilterMode, MinFilterMode, Pipeline, ReadonlyColor, RenderingDevice, RenderPass, ShaderType, Texture, UniformFormat, UniformType, Usage, VertexFormat } from 'mugl';
-import { array, ReadonlyMat4, ReadonlyVec3, ReadonlyVec4 } from 'munum';
-import { toVertices, Quad } from '.';
-import { SPRITE_FS, SPRITE_VS } from './shaders';
+import { BlendFactor, Buffer, FilterMode, MinFilterMode, Pipeline, ReadonlyColor, RenderingDevice, RenderPass, ShaderType, Texture, UniformFormat, UniformType, Usage, VertexFormat } from 'mugl';
+import { array, ReadonlyMat4, ReadonlyVec2, ReadonlyVec4, vec2, Vec2 } from 'munum';
+import { UISprite } from '../game/config';
+import { toVertices, UIQuad } from './model';
+import {UI_FS, UI_VS } from './shaders';
+
+const tmpV2: Vec2 = vec2.create();
 
 const COLOR_NONE: ReadonlyColor = [0, 0, 0, 0];
-const QUAT_VERT = toVertices(Quad);
+const QUAT_VERT = toVertices(UIQuad);
 
-export const COMPONENTS_PER_SPRITE = 12;
+export const COMPONENTS_PER_UI_SPRITE = 12;
 
-export class SpritesRenderer {
+export class UIRenderer {
   private pipeline: Pipeline | null = null;
   private pass: RenderPass | null = null;
   private buffer: Buffer | null = null;
@@ -20,11 +23,9 @@ export class SpritesRenderer {
 
   public constructor(
     private readonly device: RenderingDevice,
-    private writeDepth = false,
-    private clearColor: ReadonlyVec4 | null = null,
     private max = 8 * 8 * 5
   ) {
-    this.data = new Float32Array(COMPONENTS_PER_SPRITE * max);
+    this.data = new Float32Array(COMPONENTS_PER_UI_SPRITE * max);
   }
   
   public init(): void {
@@ -52,8 +53,8 @@ export class SpritesRenderer {
       image: document.getElementById('sprites') as TexImageSource
     });
 
-    const vert = this.device.shader({ type: ShaderType.Vertex, source: SPRITE_VS });
-    const frag = this.device.shader({ type: ShaderType.Fragment, source: SPRITE_FS });
+    const vert = this.device.shader({ type: ShaderType.Vertex, source: UI_VS });
+    const frag = this.device.shader({ type: ShaderType.Fragment, source: UI_FS });
 
     this.pipeline = this.device.pipeline({
       vert,
@@ -66,8 +67,8 @@ export class SpritesRenderer {
       }, {
         attrs: [
           { name: 'quad', format: VertexFormat.Float4 },
-          { name: 'position', format: VertexFormat.Float3 },
-          { name: 'rotation', format: VertexFormat.Float },
+          { name: 'position', format: VertexFormat.Float2 },
+          { name: 'scale', format: VertexFormat.Float2 },
           { name: 'color', format: VertexFormat.Float4 }
         ],
         instanced: true
@@ -77,10 +78,6 @@ export class SpritesRenderer {
         { name: 'tex', type: UniformType.Tex, texType: this.tex!.props.type },
         { name: 'texSize', valueFormat: UniformFormat.Vec2 },
       ],
-      depth: this.writeDepth ? {
-        write: true,
-        compare: CompareFunc.LEqual
-      } : null,
       blend: {
         srcFactorRGB: BlendFactor.SrcAlpha,
         dstFactorRGB: BlendFactor.OneMinusSrcAlpha,
@@ -92,19 +89,28 @@ export class SpritesRenderer {
     vert.destroy();
     frag.destroy();
 
-    this.pass = this.device.pass({
-      clearColor: this.clearColor,
-      clearDepth: this.clearColor ? 1 : NaN
-    });
+    this.pass = this.device.pass();
   }
 
-  public submit(quad: ReadonlyVec4, pos: ReadonlyVec3, rotation: number = 0, color: ReadonlyColor = COLOR_NONE): void {
-    if (this.i + COMPONENTS_PER_SPRITE >= this.max * COMPONENTS_PER_SPRITE) {
+  public submitText(text: string, pos: ReadonlyVec2, color: ReadonlyColor, align: number = -1, scale: ReadonlyVec2 = [1, 1]): void {
+    tmpV2[0] = pos[0] + (align > 0 ? -(4 * text.length - 1) : 0);
+    tmpV2[1] = pos[1];
+    for (let i = 0; i < text.length; ++i, tmpV2[0] += 4 * scale[0]) {
+      if (text[i] == ' ') {
+        tmpV2[0] += scale[0];
+        ++i;
+      }
+      this.submit(UISprite[text[i]], tmpV2, scale, color);
+    }
+  }
+
+  public submit(quad: ReadonlyVec4, pos: ReadonlyVec2, scale: ReadonlyVec2, color: ReadonlyColor = COLOR_NONE): void {
+    if (this.i + COMPONENTS_PER_UI_SPRITE >= this.max * COMPONENTS_PER_UI_SPRITE) {
       console.error('Buffer overflow');
     }
     array.copy(quad, this.data, 0, this.i, 4); this.i += 4;
-    array.copy(pos, this.data, 0, this.i, 3); this.i += 3;
-    this.data[this.i++] = rotation;
+    array.copy(pos, this.data, 0, this.i, 3); this.i += 2;
+    array.copy(scale, this.data, 0, this.i, 3); this.i += 2;
     array.copy(color, this.data, 0, this.i, 4); this.i += 4;
   }
 
@@ -119,7 +125,7 @@ export class SpritesRenderer {
         { name: 'tex', tex: this.tex },
         { name: 'texSize', values: [this.tex!.props.width, this.tex!.props.height] },
       ])
-      .draw(Quad.positions!.length, this.i / COMPONENTS_PER_SPRITE)
+      .draw(UIQuad.positions!.length, this.i / COMPONENTS_PER_UI_SPRITE)
       .end();
     this.i = 0;
   }

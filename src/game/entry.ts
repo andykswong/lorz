@@ -1,4 +1,4 @@
-import { Game } from '../engine';
+import { Game } from '../core';
 import { HEIGHT, WIDTH } from './config';
 import { GameScreen } from './game';
 import { StartScreen } from './start';

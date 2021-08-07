@@ -15,8 +15,8 @@ export function mapKeyToAction(key: string): Action {
     case 'ArrowDown': case 's': return Action.Down;
     case 'ArrowLeft': case 'a': return Action.Left;
     case 'ArrowRight': case 'd': return Action.Right;
-    case 'Control': return Action.Block;
-    case 'Enter': return Action.Attack;
+    case 'q': return Action.Block;
+    case 'Enter': case 'e': return Action.Attack;
     case ' ': return Action.Jump;
   }
   return Action.None;

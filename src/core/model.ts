@@ -60,3 +60,14 @@ export const Quad: Model = {
     [0.0, 1.0], [1.0, 0.0], [0.0, 0.0]
   ]
 } as Model;
+
+export const UIQuad: Model = {
+  positions: [
+    [+0.0, 0.0], [+0.0, +1.0], [+1.0, +1.0], // first triangle
+    [+0.0, 0.0], [+1.0, +1.0], [+1.0, +0.0]  // second triangle
+  ],
+  uvs: [
+    [0.0, 0.0], [0.0, 1.0], [1.0, 1.0],
+    [0.0, 0.0], [1.0, 1.0], [1.0, 0.0]
+  ]
+} as Model;

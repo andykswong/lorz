@@ -1,6 +1,6 @@
 import { RenderingDevice } from 'mugl';
 import { ReadonlyMat4 } from 'munum';
-import { COMPONENTS_PER_SPRITE, SpritesRenderer } from '../../engine';
+import { COMPONENTS_PER_SPRITE, SpritesRenderer } from '../../core';
 import { Sprite } from '../config';
 
 export class Background extends SpritesRenderer {

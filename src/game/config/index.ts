@@ -1,3 +1,4 @@
 export * from './config';
-export * from './sprite';
 export * from './physics';
+export * from './sprite';
+export * from './entities';
