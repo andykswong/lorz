@@ -3,10 +3,10 @@ import { Sprite, HitBoxChar, HitBoxWeaponSmall } from '../config';
 import { CharacterSprite } from '../graphics';
 import { Body, SpritesRenderer } from '../../core';
 import { Entity } from './entity';
-import { Weapon } from './weapon';
+import { Armor, Weapon } from './weapon';
 import { Action } from '../action';
 import { playSound, Sound } from '../sound';
-import { Projectile } from './projectile';
+import { Effect, Projectile } from './projectile';
 
 export class Character implements Body, Entity {
   public readonly sprite: CharacterSprite;
@@ -31,12 +31,12 @@ export class Character implements Body, Entity {
   public constructor(
     public hitpoint: number = 10,  
     body: ReadonlyVec4 = Sprite.HERO,
-    armor: ReadonlyVec4 | null = null,
+    public armor: Armor | null = null,
     cape: ReadonlyVec4 | null = null,
     public isHero = false
   ) {
     this.maxHitPoint = hitpoint;
-    this.sprite = new CharacterSprite(body, null, null, armor, cape);
+    this.sprite = new CharacterSprite(body, null, null, armor?.sprite, cape);
   }
 
   public update(t: number = 0): void {
@@ -61,7 +61,8 @@ export class Character implements Body, Entity {
       this.sensors.push(this._weapon?.hitbox || HitBoxWeaponSmall);
       if (this.weapon?.createProjectile) {
         const proj = this.weapon.createProjectile(this.position, this.faceForward);
-        proj.initialVelocity[2] = this.velocity[2];
+        proj.initialVelocity[0] += this.velocity[0];
+        proj.initialVelocity[2] += this.velocity[2];
         proj.owner = this;
         this.projectile = proj;
       }
@@ -100,15 +101,20 @@ export class Character implements Body, Entity {
     this.sprite.render(renderer, t);
   }
 
-  public damage(damage: number, frontAttack: boolean = true): boolean {
+  public damage(damage: number, frontAttack: boolean = true, effect: Effect = Effect.None): boolean {
     if (this.hitpoint <= 0) {
       return false;
     }
+
+    const armor = this.armor?.armor || 0;
+    damage = Math.max(0, damage - armor);
+
+    const shield = this._shield?.damage || 0;
     let blocked = frontAttack && this.sprite.isBlocking;
     if (blocked) {
-      damage = Math.max(0, damage - (this._shield?.damage || 0));
+      damage = Math.max(0, damage - shield);
       this.blockedDamage += Math.min(damage, this._shield?.damage || 0);
-      if (this.blockedDamage >= (this._shield?.damage || 0) * 5) {
+      if (this.blockedDamage >= shield * 5) {
         blocked = false;
         this.shieldBroken = 1;
         this.blockedDamage = 0;
@@ -117,13 +123,17 @@ export class Character implements Body, Entity {
     } else if (!frontAttack && this.sprite.isBlocking) {
       this.shieldBroken = 0.5;
     }
+
     if ((this.hitpoint -= damage) <= 0) {
       this.sprite.isDead = true;
     }
-    if (!blocked) {
-      this.sprite.hit();
+
+    const isHit = !!damage && !blocked;
+    if (isHit) {
+      this.sprite.hit(effect);
     }
-    return !blocked;
+
+    return isHit;
   }
 
   public get position(): Vec3 {

@@ -1,12 +1,12 @@
 import { RenderingDevice, RenderPass } from 'mugl';
 import { ReadonlyVec4, vec3 } from 'munum';
 import { OrthoCamera, Screen, SpritesRenderer, UICamera, UIRenderer } from '../core';
-import { Action, mapKeyToAction } from './action';
+import { Action, mapGamepadActions, mapKeyToAction } from './action';
 import { createHero, GREY_TEXT_COLOR, Hero, Sprite, TEXT_COLOR, UISprite, Unlockable, UnlockTable } from './config';
 import { Character } from './entities';
 import { LowRezJam2021Game } from './entry';
 import { SaveData } from './save';
-import { playSound, Sound } from './sound';
+import { playSound } from './sound';
 
 export class StartScreen implements Screen {
   private camera = new UICamera();
@@ -23,6 +23,8 @@ export class StartScreen implements Screen {
   private selectedHero: Hero = Hero.KNIGHT;
   private selectedUnlocks: Unlockable = 0;
   private hero: Character = createHero(Hero.KNIGHT);
+
+  private gamePadActions: Action = Action.None;
 
   public constructor(public readonly game: LowRezJam2021Game) {
     this.save = game.save;
@@ -57,19 +59,25 @@ export class StartScreen implements Screen {
   }
 
   public render(t: number): boolean | void {
+    this.handleGamepad();
+
     this.uiRenderer.submitText('DUNGEON  OF  LORZ', [4, 16], TEXT_COLOR, 0, [1, 1.4]);
     this.uiRenderer.submitText('START - E', [18, 56], TEXT_COLOR, 0);
 
+    const currentHero = UnlockTable[this.curretHero];
     if (!this.curretUnlock) {
-      if (this.save.isHeroUnlocked(UnlockTable[this.curretHero].hero)) {
+      if (this.save.isHeroUnlocked(currentHero.hero)) {
         this.renderShopBtn();
       } else {
         this.renderBuyBtn();
       }
     } else {
-      const unlock = UnlockTable[this.curretHero].unlocks[this.curretUnlock - 1];
+      const unlock = currentHero.unlocks[this.curretUnlock - 1];
       if (this.save.isUnlocked(unlock.type)) {
-        this.renderEquipBtn(!!(unlock.type & this.selectedUnlocks) && this.selectedHero === UnlockTable[this.curretHero].hero);
+        this.renderEquipBtn(
+          (!!(unlock.type & this.selectedUnlocks) && this.selectedHero === currentHero.hero) ||
+          !this.save.isHeroUnlocked(currentHero.hero)
+        );
       } else {
         this.renderBuyBtn();
       }
@@ -115,7 +123,26 @@ export class StartScreen implements Screen {
     if (!action) {
       return false;
     }
+    return this.act(action);
+  }
 
+  private handleGamepad(): void {
+    const actions = mapGamepadActions();
+    for (const action of [Action.Left, Action.Right, Action.Up, Action.Down]) {
+      if (!(this.gamePadActions & action) && (actions & action)) {
+        this.act(action);
+        break;
+      }
+    }
+    if ((this.gamePadActions & Action.Block) && !(actions & Action.Block)) {
+      this.act(Action.Block);
+    } else if ((this.gamePadActions & Action.Attack) && !(actions & Action.Attack)) {
+      this.act(Action.Attack);
+    }
+    this.gamePadActions = actions;
+  }
+
+  private act(action: Action): boolean {
     if (action === Action.Attack) {
       this.game.selectedHero = this.selectedHero;
       this.game.selectedUnlocks = this.selectedUnlocks;
@@ -157,20 +184,20 @@ export class StartScreen implements Screen {
       }
     }
 
-    if (action === Action.Right) {
+    if (action & Action.Right) {
       this.curretHero = (this.curretHero + 1) % UnlockTable.length;
       this.curretUnlock = 0;
       this.selectedUnlocks = 0;
     }
-    if (action === Action.Left) {
+    if (action & Action.Left) {
       this.curretHero = (this.curretHero + UnlockTable.length - 1) % UnlockTable.length;
       this.curretUnlock = 0;
       this.selectedUnlocks = 0;
     }
-    if (action === Action.Up) {
+    if (action & Action.Up) {
       this.curretUnlock = (this.curretUnlock + 1) % (UnlockTable[this.curretHero].unlocks.length + 1);
     }
-    if (action === Action.Down) {
+    if (action & Action.Down) {
       this.curretUnlock = (this.curretUnlock + UnlockTable[this.curretHero].unlocks.length) % (UnlockTable[this.curretHero].unlocks.length + 1);
     }
 
@@ -210,9 +237,9 @@ export class StartScreen implements Screen {
     this.uiRenderer.submitText('USE - Q', [56, 42], selected ? GREY_TEXT_COLOR : TEXT_COLOR, 1);
   }
 
-  private renderEquipBtn(equipped: boolean = false): void {
+  private renderEquipBtn(disabled: boolean = false): void {
     this.uiRenderer.submitText(';', [15, 42], TEXT_COLOR, 0);
-    this.uiRenderer.submitText('EQUIP - Q', [20, 42], equipped ? GREY_TEXT_COLOR : TEXT_COLOR, 0);
+    this.uiRenderer.submitText('EQUIP - Q', [20, 42], disabled ? GREY_TEXT_COLOR : TEXT_COLOR, 0);
   }
 
   private updateHero(): void {

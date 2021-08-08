@@ -3,9 +3,9 @@ import { mat4, Mat4, translate, Vec3, vec3 } from 'munum';
 import { Body, simulate, OrthoCamera, ParticlesRenderer, Screen, SpritesRenderer, UIRenderer, UICamera } from '../core';
 import { Background } from './graphics';
 import { LowRezJam2021Game } from './entry';
-import { createHero, Hero, HIT_COLOR, MAX_COINS, MIN, TEXT_COLOR, UISprite, Weapons } from './config';
-import { Character, Chest, Entity, Enemy, Projectile } from './entities';
-import { Action, mapKeyToAction } from './action';
+import { createHero, Hero, HIT_COLOR_VEC4, MAX_COINS, MIN, PUFF_COLOR, TEXT_COLOR, UISprite, Weapons } from './config';
+import { Character, Chest, Entity, Enemy, Projectile, Effect } from './entities';
+import { Action, mapGamepadActions, mapKeyToAction } from './action';
 import { playSound } from './sound';
 import { SaveData } from './save';
 import { Spawner } from './spawn';
@@ -39,7 +39,7 @@ export class GameScreen implements Screen {
   private heroHealTimer: number = 0;
   private enemies: Enemy[] = [];
   private items: (Body & Entity)[] = [];
-  private actions: Action = Action.None;
+  private keyboardActions: Action = Action.None;
 
   private entities: (Body & Entity)[] = [];
 
@@ -71,10 +71,11 @@ export class GameScreen implements Screen {
     this.init = true;
     this.lost = false;
     this.victory = false;
+    this.coins = 0;
 
     playSound('Game');
 
-    this.actions = Action.None;
+    this.keyboardActions = Action.None;
     this.hero = createHero(this.game.selectedHero, this.game.selectedUnlocks);
     this.hero.position[0] = 1;
     this.heroHealTimer = 0;
@@ -175,28 +176,34 @@ export class GameScreen implements Screen {
 
     if (a instanceof Character) {
       let damage = 0;
-      let pushBack = 0;
+      let pushBack = 1;
       let isCut = false;
+      let hitColor = HIT_COLOR_VEC4;
+      let effect = Effect.None;
+
       if (b instanceof Character) {
+        isCut = !!b.weapon?.isSharp;
         damage = b.weapon?.damage || b.attack;
         pushBack = b.weapon?.pushBack || 1;
         if (a instanceof Enemy && b instanceof Enemy) {
           damage = 0;
         }
-        isCut = !!b.weapon;
       } else if (b instanceof Projectile && !b.isDead && b.owner !== a) {
+        effect = b.effect;
+        pushBack = b.effect === Effect.Pushback ? 1.5 : 1;
         damage = b.damage;
+        hitColor = b.hitColor;
         b.hitpoint -= damage;
         isCut = b.isSharp;
       }
       if (damage > 0) {
         const dir = a.position[0] < b.position[0] ? -1 : 1;
         const frontAttack = (a.faceForward && dir < 0) || (!a.faceForward && dir > 0);
-        const hit = a.damage(damage, frontAttack);
+        const hit = a.damage(damage, frontAttack, effect);
         this.particles.submit(20, 0.3,
           vec3.add(a.position, [-2, 3, -2]), vec3.add(a.position, [2, 5, 2]),
           [dir < 0 ? -16 : -4, 0, -1], [dir < 0 ? 4 : 16, 6, 1],
-          hit ? [...HIT_COLOR, 1] : [0.8, 0.8, 0.8, 1]
+          hit ? hitColor : PUFF_COLOR
         );
         vec3.set(a.velocity, dir * pushBack * damage * 24 * (hit ? 1 : 0.5), 0, (a.position[2] - b.position[2]) * 12 * (hit ? 1 : 0.5));
         if (!hit) {
@@ -220,13 +227,13 @@ export class GameScreen implements Screen {
 
   public onKeyDown(key: string): boolean {
     const action: Action = mapKeyToAction(key);
-    this.actions = this.actions | action;
+    this.keyboardActions = this.keyboardActions | action;
     return !!action;
   }
 
   public onKeyUp(key: string): boolean {
     const action: Action | null = mapKeyToAction(key);
-    this.actions = this.actions & (~action);
+    this.keyboardActions = this.keyboardActions & (~action);
 
     if (this.ended && action === Action.Attack) {
       this.game.restart();
@@ -256,7 +263,7 @@ export class GameScreen implements Screen {
   }
 
   private updateEntities(t: number, dt: number): void {
-    this.hero.actions = this.actions;
+    this.hero.actions = this.keyboardActions | mapGamepadActions();
     if (this.hero.projectile) {
       this.items.push(this.hero.projectile!);
       this.hero.projectile = null;
@@ -308,9 +315,12 @@ export class GameScreen implements Screen {
       return;
     }
     this.heroHealTimer += delta;
-    if (this.heroHealTimer >= HERO_HEAL_INTERVAL && this.hero.hitpoint < this.hero.maxHitPoint) {
-      this.hero.hitpoint++;
-      this.heroHealTimer = this.heroHealTimer % HERO_HEAL_INTERVAL;
+    if (this.hero.hitpoint < this.hero.maxHitPoint) {
+      const healInterval = Math.max(1, HERO_HEAL_INTERVAL - (this.hero.armor?.recoverRate || 0));
+      if (this.heroHealTimer >= healInterval) {
+        this.hero.hitpoint++;
+        this.heroHealTimer = this.heroHealTimer % healInterval;
+      }
     }
   }
 }

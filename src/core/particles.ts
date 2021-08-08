@@ -87,6 +87,10 @@ export class ParticlesRenderer {
   }
 
   public render(viewProj: ReadonlyMat4, time: number): void {
+    if (!this.instances) {
+      return;
+    }
+
     let count = 0;
     for (let i = 0; i < this.instances.length && count < this.data.length;) {
       const inst = this.instances[i];

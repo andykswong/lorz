@@ -1,6 +1,7 @@
 import { ReadonlyVec4, vec3, Vec3 } from 'munum';
 import { SpritesRenderer } from '../../core';
-import { frame, HIT_COLOR, WEAPON_OFFSET } from '../config';
+import { frame, FREEZE_COLOR, HIT_COLOR, WEAPON_OFFSET } from '../config';
+import { Effect } from '../entities';
 
 const tmpV3 = vec3.create();
 
@@ -12,6 +13,7 @@ export class CharacterSprite {
   public isDead: boolean = false;
   public isFullyDead: boolean = false;
   public isAttacking: number = 0;
+  public isFrozen: number = 0;
   public isHit: number = 0;
   private lastTime: number = 0;
   private alpha: number = 1;
@@ -39,7 +41,8 @@ export class CharacterSprite {
     }
 
     const dir = (this.faceForward ? 1 : -1);
-    const color: ReadonlyVec4 | undefined = this.isHit ? [...HIT_COLOR, this.isHit * 2] : undefined;
+    const color: ReadonlyVec4 | undefined = this.isHit ?
+      this.isFrozen ? [...FREEZE_COLOR, this.isHit] : [...HIT_COLOR, this.isHit * 2] : undefined;
     const body = (this.isWalking && !this.isDead) ? frame(this.body, t * 5) : this.body;
 
     renderer.submit(body, this.position, dir, this.alpha, color);
@@ -52,11 +55,14 @@ export class CharacterSprite {
 
     this.isAttacking = Math.max(0, this.isAttacking - dt);
     this.isHit = Math.max(0, this.isHit - dt);
+    this.isFrozen =  Math.max(0, this.isFrozen - dt);
     this.lastTime = t;
   }
 
-  public hit(): void {
-    this.isHit = 0.5;
+  public hit(effect: Effect = Effect.None): void {
+    const isFreeze = effect === Effect.Freeze;
+    this.isHit = Math.max(isFreeze ? 1 : 0.5, this.isHit);
+    this.isFrozen = isFreeze ? 1 : 0;
   }
 
   public attack(speed: number = 0.5): void {

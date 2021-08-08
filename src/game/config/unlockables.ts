@@ -10,7 +10,9 @@ export enum Unlockable {
   ARMOR = 1 << 2,
   STEELSHIELD = 1 << 3,
   SPEAR = 1 << 4,
+  ICESTAFF = 1 << 5,
   BOW = 1 << 6,
+  PRIEST = 1 << 7,
 }
 
 export interface UnlockableInfo {
@@ -28,10 +30,10 @@ export interface HeroUnlocks {
   unlocks: UnlockableInfo[];
 }
 
-const TWOHANDED = Unlockable.BOW | Unlockable.SPEAR;
+const TWOHANDED = Unlockable.BOW | Unlockable.SPEAR | Unlockable.ICESTAFF | Unlockable.PRIEST;
 const WEAPONS = Unlockable.SWORD | TWOHANDED;
 const SHIELDS = Unlockable.SHIELD | Unlockable.STEELSHIELD;
-const ARMOR = Unlockable.ARMOR;
+const ARMOR = Unlockable.ARMOR | Unlockable.PRIEST;
 
 export const UnlockTable: HeroUnlocks[] = [
   {
@@ -58,8 +60,10 @@ export const UnlockTable: HeroUnlocks[] = [
   {
     name: 'MAGE',
     hero: Hero.MAGE,
-    coins: 5000,
+    coins: 4500,
     unlocks: [
+      { name: 'ICESTAFF', type: Unlockable.ICESTAFF, coins: 2100, required: 0, exclude: WEAPONS | SHIELDS },
+      { name: 'PRIEST', type: Unlockable.PRIEST, coins: 2100, required: 0, exclude: ARMOR | WEAPONS | SHIELDS },
     ]
   },
 ];

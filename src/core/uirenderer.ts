@@ -119,6 +119,10 @@ export class UIRenderer {
   }
 
   public render(viewProj: ReadonlyMat4): void {
+    if (!this.i) {
+      return;
+    }
+
     this.instBuffer!.data(this.data);
     this.device.render(this.pass!)
       .pipeline(this.pipeline!)
