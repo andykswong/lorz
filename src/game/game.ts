@@ -57,6 +57,10 @@ export class GameScreen implements Screen {
     return this.victory || this.lost;
   }
 
+  public get totalCoins(): number {
+    return Math.floor(Math.min(MAX_COINS, this.coins + this.save.coins));
+  }
+
   public start(): void {
     if (!this.init) {
       this.bg.init();
@@ -67,7 +71,6 @@ export class GameScreen implements Screen {
     this.init = true;
     this.lost = false;
     this.victory = false;
-    this.coins = this.save.coins;
 
     playSound('Game');
 
@@ -125,19 +128,26 @@ export class GameScreen implements Screen {
   }
 
   public renderUI(): void {
-    const text = this.coins.toString();
-    this.uiRenderer.submitText(text, [63, 1], TEXT_COLOR, 1);
-    this.uiRenderer.submit(UISprite.COIN, [63 - text.length * 4 - 5, 1], [1, 1]);
+    const totalCoins = this.totalCoins.toString();
+    this.uiRenderer.submitText(totalCoins, [63, 1], TEXT_COLOR, 1);
+    this.uiRenderer.submit(UISprite.COIN, [63 - totalCoins.length * 4 - 5, 1], [1, 1]);
 
     const hpBarWidth = 24;
     const remainingHpWidth = Math.max(0, this.hero.hitpoint / this.hero.maxHitPoint * hpBarWidth);
     this.uiRenderer.submit(UISprite.HPBG, [1, 1], [hpBarWidth + 2, 1.5]);
     remainingHpWidth && this.uiRenderer.submit(UISprite.HP, [1, 1], [remainingHpWidth, 2]);
 
-    if (this.victory) {
-      this.uiRenderer.submitText('VICTORY!', [18, 30], TEXT_COLOR, 0);
-    } else if (this.lost) {
-      this.uiRenderer.submitText('YOU ARE DEAD!', [11, 30], TEXT_COLOR, 0);
+    if (this.ended) {
+      if (this.victory) {
+        this.uiRenderer.submitText('VICTORY!', [18, 28], TEXT_COLOR, 0);
+      } else if (this.lost) {
+        this.uiRenderer.submitText('YOU ARE DEAD!', [11, 28], TEXT_COLOR, 0);
+      }
+      const coins = Math.floor(Math.min(MAX_COINS, this.coins)).toString();
+      const leftOffset = 17 - coins.length * 2;
+      this.uiRenderer.submitText('EARNED', [leftOffset, 36], TEXT_COLOR, 0);
+      this.uiRenderer.submit(UISprite.COIN, [leftOffset + 25, 36], [1, 1]);
+      this.uiRenderer.submitText(coins, [leftOffset + 31, 36], TEXT_COLOR);
     }
 
     this.uiCamera.updateProj();
@@ -201,7 +211,7 @@ export class GameScreen implements Screen {
           if (a.shield === Weapons.MONEYBAG) {
             playSound('Coin');
           }
-          this.coins = Math.min(MAX_COINS, this.coins + a.coins);
+          this.coins += a.coins;
           a.coins = 0;
         }
       }
@@ -236,7 +246,7 @@ export class GameScreen implements Screen {
       return;
     }
 
-    this.save.coins = this.coins;
+    this.save.coins = this.totalCoins;
 
     if (this.lost) {
       playSound('Lost');

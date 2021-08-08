@@ -36,7 +36,9 @@ export class Game {
     if (!device) {
       throw new Error('WebGL is unsupported');
     }
-    device.feature('OES_standard_derivatives');
+    if (!device.feature('ANGLE_instanced_arrays')) {
+      throw new Error('WebGL instancing (ANGLE_instanced_arrays) is unsupported');
+    }
 
     this.device = device;
   }
