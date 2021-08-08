@@ -6,9 +6,12 @@ import { LowRezJam2021Game } from './entry';
 import { createHero, Hero, HIT_COLOR, MAX_COINS, MIN, TEXT_COLOR, UISprite, Weapons } from './config';
 import { Character, Chest, Entity, Enemy, Projectile } from './entities';
 import { Action, mapKeyToAction } from './action';
-import { playSound, Sound } from './sound';
+import { playSound } from './sound';
 import { SaveData } from './save';
 import { Spawner } from './spawn';
+
+const MAX_DIST = 128;
+const HERO_HEAL_INTERVAL = 3;
 
 const tmpVec3: Vec3 = vec3.create();
 const tmpMat4: Mat4 = mat4.create();
@@ -66,9 +69,7 @@ export class GameScreen implements Screen {
     this.victory = false;
     this.coins = this.save.coins;
 
-    Sound.Game.currentTime = 0;
-    Sound.Game.loop = true;
-    Sound.Game.play();
+    playSound('Game');
 
     this.actions = Action.None;
     this.hero = createHero(this.game.selectedHero, this.game.selectedUnlocks);
@@ -93,65 +94,28 @@ export class GameScreen implements Screen {
       this.lastTime = t;
     }
     const dt = t - this.lastTime;
+    const x = Math.max(0, this.hero.position[0]);
+
+    // Update
 
     this.checkEndGame();
 
-    this.camera.updateProj();
-
-    const x = Math.max(0, this.hero.position[0]);
-    tmpVec3[0] = -x;
-    translate(tmpVec3, tmpMat4);
-    mat4.mul(this.camera.viewProj, tmpMat4, tmpMat4);
-
+    this.bg.update(x);
     this.spawner.update(x, this.hero);
-
-    this.hero.actions = this.actions;
-    if (this.hero.projectile) {
-      this.items.push(this.hero.projectile!);
-      this.hero.projectile = null;
-    }
-
-    for (let i = 0; i < this.enemies.length;) {
-      if (this.enemies[i].isDead || this.hero.position[0] - this.enemies[i].position[0] > 128) {
-        this.enemies[i] = this.enemies[this.enemies.length - 1];
-        this.enemies.pop();
-      } else {
-        if (this.enemies[i].projectile) {
-          this.items.push(this.enemies[i].projectile!);
-          this.enemies[i].projectile = null;
-        }
-        ++i;
-      }
-    }
-
-    for (let i = 0; i < this.items.length;) {
-      if (this.items[i].isDead || (this.items[i].position[0] <= MIN[0] && this.items[i].velocity[0] <= 0)) {
-        this.items[i] = this.items[this.items.length - 1];
-        this.items.pop();
-      } else {
-        ++i;
-      }
-    }
-
-    this.entities.length = 0;
-    this.entities.push(this.hero);
-    this.entities.push(...this.enemies);
-    this.entities.push(...this.items);
-
-    this.healHero(dt);
-
-    for (const entity of this.entities) {
-      entity.update(t);
-    }
-
+    this.updateEntities(t, dt);
     simulate(dt, this.entities, this.onCollide);
-
     for (const entity of this.entities) {
       entity.render(this.renderer, t);
     }
 
-    this.bg.update(x);
+    // Render
+
     this.bg.render(this.camera.viewProj);
+
+    this.camera.updateProj();
+    tmpVec3[0] = -x;
+    translate(tmpVec3, tmpMat4);
+    mat4.mul(this.camera.viewProj, tmpMat4, tmpMat4);
     this.renderer.render(tmpMat4);
     this.particles.render(tmpMat4, t);
 
@@ -185,7 +149,7 @@ export class GameScreen implements Screen {
       if (b instanceof Character && b.isHero || b instanceof Projectile && b.owner?.isHero) {
         a.isOpen = true;
         this.coins += a.coins;
-        playSound(Sound.Coin);
+        playSound('Coin');
       }
     }
 
@@ -226,16 +190,16 @@ export class GameScreen implements Screen {
         );
         vec3.set(a.velocity, dir * pushBack * damage * 24 * (hit ? 1 : 0.5), 0, (a.position[2] - b.position[2]) * 12 * (hit ? 1 : 0.5));
         if (!hit) {
-          playSound(Sound.Block);
+          playSound('Block');
         } else {
-          playSound(isCut ? Sound.Cut : Sound.Hit);
+          playSound(isCut ? 'Cut' : 'Hit');
         }
 
         if (a.hitpoint <= 0 && a instanceof Enemy &&
           ((b instanceof Character && b.isHero) || b instanceof Projectile && b.owner?.isHero)
         ) {
           if (a.shield === Weapons.MONEYBAG) {
-            playSound(Sound.Coin);
+            playSound('Coin');
           }
           this.coins = Math.min(MAX_COINS, this.coins + a.coins);
           a.coins = 0;
@@ -255,7 +219,6 @@ export class GameScreen implements Screen {
     this.actions = this.actions & (~action);
 
     if (this.ended && action === Action.Attack) {
-      Sound.Lost.pause();
       this.game.restart();
     }
 
@@ -275,13 +238,58 @@ export class GameScreen implements Screen {
 
     this.save.coins = this.coins;
 
-    Sound.Game.pause();
     if (this.lost) {
-      Sound.Lost.load();
-      Sound.Lost.play();
+      playSound('Lost');
     } else {
-      Sound.Victory.load();
-      Sound.Lost.play();
+      playSound('Victory');
+    }
+  }
+
+  private updateEntities(t: number, dt: number): void {
+    this.hero.actions = this.actions;
+    if (this.hero.projectile) {
+      this.items.push(this.hero.projectile!);
+      this.hero.projectile = null;
+    }
+
+    for (let i = 0; i < this.enemies.length;) {
+      const enemy = this.enemies[i];
+      if (enemy.isDead ||
+        (this.hero.position[0] - enemy.position[0] > MAX_DIST) ||
+        (this.hero.position[0] - enemy.position[0] < -MAX_DIST && enemy.hitpoint/enemy.maxHitPoint <= enemy.fleeThreshold)
+      ) {
+        this.enemies[i] = this.enemies[this.enemies.length - 1];
+        this.enemies.pop();
+      } else {
+        if (enemy.projectile) {
+          this.items.push(enemy.projectile!);
+          enemy.projectile = null;
+        }
+        ++i;
+      }
+    }
+
+    for (let i = 0; i < this.items.length;) {
+      if (this.items[i].isDead ||
+        (this.items[i].position[0] <= MIN[0] && this.items[i].velocity[0] <= 0) ||
+        (Math.abs(this.hero.position[0] - this.items[i].position[0]) > MAX_DIST) 
+      ) {
+        this.items[i] = this.items[this.items.length - 1];
+        this.items.pop();
+      } else {
+        ++i;
+      }
+    }
+
+    this.entities.length = 0;
+    this.entities.push(this.hero);
+    this.entities.push(...this.enemies);
+    this.entities.push(...this.items);
+
+    this.healHero(dt);
+
+    for (const entity of this.entities) {
+      entity.update(t);
     }
   }
 
@@ -290,9 +298,9 @@ export class GameScreen implements Screen {
       return;
     }
     this.heroHealTimer += delta;
-    if (this.heroHealTimer >= 2 && this.hero.hitpoint < this.hero.maxHitPoint) {
+    if (this.heroHealTimer >= HERO_HEAL_INTERVAL && this.hero.hitpoint < this.hero.maxHitPoint) {
       this.hero.hitpoint++;
-      this.heroHealTimer = this.heroHealTimer % 2;
+      this.heroHealTimer = this.heroHealTimer % HERO_HEAL_INTERVAL;
     }
   }
 }

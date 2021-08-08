@@ -6,7 +6,7 @@ import { createHero, GREY_TEXT_COLOR, Hero, Sprite, TEXT_COLOR, UISprite, Unlock
 import { Character } from './entities';
 import { LowRezJam2021Game } from './entry';
 import { SaveData } from './save';
-import { Sound } from './sound';
+import { playSound, Sound } from './sound';
 
 export class StartScreen implements Screen {
   private camera = new UICamera();
@@ -41,9 +41,7 @@ export class StartScreen implements Screen {
     }
     this.init = true;
 
-    Sound.Game.currentTime = 0;
-    Sound.Game.loop = true;
-    Sound.Game.play();
+    playSound('Game');
 
     this.curretHero = UnlockTable.reduce((idx, hero, currentIdx) => (hero.hero === this.selectedHero ? currentIdx : idx), 0);
     this.curretUnlock = 0;

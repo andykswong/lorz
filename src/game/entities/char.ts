@@ -5,7 +5,7 @@ import { Body, SpritesRenderer } from '../../core';
 import { Entity } from './entity';
 import { Weapon } from './weapon';
 import { Action } from '../action';
-import { Sound } from '../sound';
+import { playSound, Sound } from '../sound';
 import { Projectile } from './projectile';
 
 export class Character implements Body, Entity {
@@ -90,9 +90,7 @@ export class Character implements Body, Entity {
     }
 
     if (this.isHero && this.sprite.isWalking && (!wasWalking || Sound.Footstep.ended)) {
-      Sound.Footstep.currentTime = 0;
-      Sound.Footstep.volume = 0.05;
-      Sound.Footstep.play();
+      playSound('Footstep');
     }
 
     this.lastTime = t;

@@ -11,8 +11,8 @@ export class SaveData {
   private _unlock: number = 0;
 
   public constructor() {
-    if (window.localStorage) {
-      try {
+    try {
+      if (window.localStorage) {
         const coins = window.localStorage.getItem(COINS);
         this.coins = (coins && parseInt(coins)) || this._coins;
 
@@ -21,9 +21,9 @@ export class SaveData {
 
         const unlock = window.localStorage.getItem(UNLOCKABLES);
         this._unlock = (unlock && parseInt(unlock)) || this._unlock;
-      } catch (e) {
-        console.warn(e);
       }
+    } catch (e) {
+      console.warn(e);
     }
   }
 
@@ -55,12 +55,10 @@ export class SaveData {
   }
 
   private save(key: string, data: string): void {
-    if (window.localStorage) {
-      try {
-        window.localStorage.setItem(key, data);
-      } catch (e) {
-        console.warn(e);
-      }
+    try {
+      window.localStorage.setItem(key, data);
+    } catch (e) {
+      console.warn(e);
     }
   }
 }
