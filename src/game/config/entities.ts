@@ -1,23 +1,25 @@
 import { ReadonlyVec3, ReadonlyVec4, vec3 } from 'munum';
 import { Character, Weapon } from '../entities';
 import { Enemy } from '../entities/enemy';
+import { Projectile } from '../entities/projectile';
 import { ORIGIN } from './config';
-import { HitBoxNone, HitBoxWeaponLarge, HitBoxWeaponNormal, HitBoxWeaponSmall, HitBoxWeaponXLarge } from './physics';
+import { HitBoxWeaponLarge, HitBoxWeaponNormal, HitBoxWeaponSmall, HitBoxWeaponXLarge } from './physics';
 import { Sprite } from './sprite';
 import { Hero, Unlockable } from './unlockables';
 
 export const Weapons = {
-  BOW: new Weapon(2, Sprite.BOW, HitBoxNone, 0.6, true, 4),
+  BOW: new Weapon(2, Sprite.BOW, HitBoxWeaponLarge, 0.6, true, 4, createArrow),
   AXE: new Weapon(3, Sprite.AXE, HitBoxWeaponNormal),
   KNIFE: new Weapon(2, Sprite.KNIFE, HitBoxWeaponSmall, 0.2),
   SWORD: new Weapon(5, Sprite.SWORD, HitBoxWeaponNormal),
   GREATAXE: new Weapon(8, Sprite.GREATAXE, HitBoxWeaponLarge, 1),
   SPEAR: new Weapon(8, Sprite.SPEAR, HitBoxWeaponXLarge, 0.7, true),
   DOUBLEAXE: new Weapon(12, Sprite.DOUBLEAXE, HitBoxWeaponLarge, 1, true),
-  FIRESTAFF: new Weapon(2, Sprite.FIRESTAFF, HitBoxNone, 0.6, true, 4),
+  FIRESTAFF: new Weapon(2, Sprite.FIRESTAFF, HitBoxWeaponLarge, 0.6, true, 4, createFireball),
   SMALLSHIELD: new Weapon(3, Sprite.SMALLSHIELD),
   WOODENSHIELD: new Weapon(4, Sprite.WOODENSHIELD),
-  STEELSHIELD: new Weapon(6, Sprite.STEELSHIELD)
+  STEELSHIELD: new Weapon(6, Sprite.STEELSHIELD),
+  MONEYBAG: new Weapon(1, Sprite.MONEYBAG, HitBoxWeaponNormal, 1, true),
 } as const;
 
 const HeroHP: Record<Hero, number> = {
@@ -154,6 +156,16 @@ export function createSlime3(hp: number = 50, position: ReadonlyVec3 = ORIGIN): 
   return enemy;
 }
 
+export function createGoblin(hp: number = 30, position: ReadonlyVec3 = ORIGIN): Enemy {
+  const enemy = new Enemy(hp, Sprite.GOBLIN);
+  enemy.shield = Weapons.MONEYBAG;
+  enemy.coins = Math.floor(30 + Math.random() * 20);
+  enemy.fleeThreshold = 1;
+  enemy.speed = 24;
+  vec3.copy(position, enemy.position);
+  return enemy;
+}
+
 export function createMinotaur(hp: number = 70, position: ReadonlyVec3 = ORIGIN): Enemy {
   const enemy = new Enemy(hp, Sprite.MINOTAUR);
   enemy.weapon = Weapons.GREATAXE;
@@ -204,4 +216,23 @@ export function createDemonSkeleton(hp: number = 30, position: ReadonlyVec3 = OR
   enemy.speed = 48;
   vec3.copy(position, enemy.position);
   return enemy;
+}
+
+export function createArrow(position: ReadonlyVec3, faceForward: boolean): Projectile {
+  const proj = new Projectile(Sprite.ARROW);
+  proj.lifeTime = 2;
+  proj.damage = 4;
+  vec3.copy(position, proj.position);
+  proj.velocity[0] = (faceForward ? 1 : -1) * 96;
+  proj.isSharp = true;
+  return proj;
+}
+
+export function createFireball(position: ReadonlyVec3, faceForward: boolean): Projectile {
+  const proj = new Projectile(Sprite.FIREBALL);
+  proj.damage = 6;
+  vec3.copy(position, proj.position);
+  proj.velocity[0] = (faceForward ? 1 : -1) * 40;
+
+  return proj;
 }

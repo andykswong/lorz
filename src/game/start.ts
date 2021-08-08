@@ -42,6 +42,7 @@ export class StartScreen implements Screen {
     this.init = true;
 
     Sound.Game.currentTime = 0;
+    Sound.Game.loop = true;
     Sound.Game.play();
 
     this.curretHero = UnlockTable.reduce((idx, hero, currentIdx) => (hero.hero === this.selectedHero ? currentIdx : idx), 0);
@@ -159,10 +160,12 @@ export class StartScreen implements Screen {
     if (action === Action.Right) {
       this.curretHero = (this.curretHero + 1) % UnlockTable.length;
       this.curretUnlock = 0;
+      this.selectedUnlocks = 0;
     }
     if (action === Action.Left) {
       this.curretHero = (this.curretHero + UnlockTable.length - 1) % UnlockTable.length;
       this.curretUnlock = 0;
+      this.selectedUnlocks = 0;
     }
     if (action === Action.Up) {
       this.curretUnlock = (this.curretUnlock + 1) % (UnlockTable[this.curretHero].unlocks.length + 1);

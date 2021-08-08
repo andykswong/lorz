@@ -6,6 +6,7 @@ import { Entity } from './entity';
 import { Weapon } from './weapon';
 import { Action } from '../action';
 import { Sound } from '../sound';
+import { Projectile } from './projectile';
 
 export class Character implements Body, Entity {
   public readonly sprite: CharacterSprite;
@@ -16,9 +17,11 @@ export class Character implements Body, Entity {
   public readonly friction: number = 16;
   public hitbox: ReadonlyAABB = HitBoxChar;
   public sensors: ReadonlyAABB[] = [];
+  public projectile: Projectile | null = null;
   public readonly maxHitPoint: number;
   private blockedDamage: number = 0;
   private shieldBroken: number = 0;
+  protected lastTime: number = 0;
 
   public actions: Action = Action.None;
 
@@ -37,6 +40,11 @@ export class Character implements Body, Entity {
   }
 
   public update(t: number = 0): void {
+    if (!this.lastTime) {
+      this.lastTime = t;
+    }
+    const dt = t - this.lastTime;
+
     this.sensors.length = 0;
     const wasWalking = this.sprite.isWalking;
     this.sprite.isWalking = false;
@@ -45,12 +53,17 @@ export class Character implements Body, Entity {
       return;
     }
 
-    this.shieldBroken = Math.max(0, this.shieldBroken - t);
+    this.shieldBroken = Math.max(0, this.shieldBroken - dt);
     this.sprite.isBlocking = !this.shieldBroken && !!(this._shield && (this.actions & Action.Block));
 
     if (!this.sprite.isBlocking && !this.sprite.isHit && !this.sprite.isAttacking && (this.actions & Action.Attack)) {
       this.sprite.attack(this.weapon?.speed);
       this.sensors.push(this._weapon?.hitbox || HitBoxWeaponSmall);
+      if (this.weapon?.createProjectile) {
+        const proj = this.weapon.createProjectile(this.position, this.faceForward);
+        proj.owner = this;
+        this.projectile = proj;
+      }
     }
 
     if (this.actions & Action.Left) {
@@ -77,8 +90,11 @@ export class Character implements Body, Entity {
 
     if (this.isHero && this.sprite.isWalking && (!wasWalking || Sound.Footstep.ended)) {
       Sound.Footstep.currentTime = 0;
+      Sound.Footstep.volume = 0.1;
       Sound.Footstep.play();
     }
+
+    this.lastTime = t;
   }
 
   public render(renderer: SpritesRenderer, t: number = 0): void {

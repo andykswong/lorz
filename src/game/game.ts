@@ -3,12 +3,13 @@ import { mat4, Mat4, translate, Vec3, vec3 } from 'munum';
 import { Body, simulate , OrthoCamera, ParticlesRenderer, Screen, SpritesRenderer, UIRenderer, UICamera } from '../core';
 import { Background } from './graphics';
 import { LowRezJam2021Game } from './entry';
-import { createBat, createDemonSkeleton, createHero, createMinotaur, createMinotaur2, createRat, createSkeleton, createSkeleton2, createSlime, createSlime2, createSlime3, createSnake, createSpider, Hero, HIT_COLOR, MAX_COINS, TEXT_COLOR, UISprite } from './config';
+import { createArrow, createBat, createDemonSkeleton, createGoblin, createHero, createMinotaur, createMinotaur2, createRat, createSkeleton, createSkeleton2, createSlime, createSlime2, createSlime3, createSnake, createSpider, Hero, HIT_COLOR, MAX_COINS, MIN, ORIGIN, TEXT_COLOR, UISprite, Weapons } from './config';
 import { Character, Chest, Entity } from './entities';
 import { Action, mapKeyToAction } from './action';
 import { playSound, Sound } from './sound';
 import { Enemy } from './entities/enemy';
 import { SaveData } from './save';
+import { Projectile } from './entities/projectile';
 
 const tmpVec3: Vec3 = vec3.create();
 const tmpMat4: Mat4 = mat4.create();
@@ -65,10 +66,11 @@ export class GameScreen implements Screen {
     this.coins = this.save.coins;
 
     Sound.Game.currentTime = 0;
+    Sound.Game.loop = true;
     Sound.Game.play();
 
+    this.actions = Action.None;
     this.hero = createHero(this.game.selectedHero, this.game.selectedUnlocks);
-    this.hero.velocity[0] = this.hero.speed;
 
     this.enemies.length = 0;
 
@@ -107,6 +109,13 @@ export class GameScreen implements Screen {
 const chest = new Chest();
 vec3.set(chest.position, 20, 0, 8);
 this.items.push(chest);
+
+this.items.push(createArrow([-20, 0, -8], true));
+
+enemy = createGoblin();
+enemy.target = this.hero;
+vec3.set(enemy.position, 0, 0, 16);
+this.enemies.push(enemy);
 
 enemy = createSpider();
 enemy.target = this.hero;
@@ -160,11 +169,28 @@ this.enemies.push(enemy);
     this.bg.render(this.camera.viewProj);
 
     this.hero.actions = this.actions;
+    if (this.hero.projectile) {
+      this.items.push(this.hero.projectile!);
+      this.hero.projectile = null;
+    }
   
     for (let i = 0; i < this.enemies.length;) {
       if (this.enemies[i].isDead) {
         this.enemies[i] = this.enemies[this.enemies.length - 1];
         this.enemies.pop();
+      } else {
+        if (this.enemies[i].projectile) {
+          this.items.push(this.enemies[i].projectile!);
+          this.enemies[i].projectile = null;
+        }
+        ++i;
+      }
+    }
+  
+    for (let i = 0; i < this.items.length;) {
+      if (this.items[i].isDead || (this.items[i].position[0] <= MIN[0] && this.items[i].velocity[0] <= 0)) {
+        this.items[i] = this.items[this.items.length - 1];
+        this.items.pop();
       } else {
         ++i;
       }
@@ -217,11 +243,21 @@ this.enemies.push(enemy);
 
   public onCollide = (a: Body, b: Body, sensor: number): void => {
     if (a instanceof Chest && !a.isOpen) {
-      if (b instanceof Character && b.isHero) {
+      if (b instanceof Character && b.isHero || b instanceof Projectile && b.owner?.isHero) {
         a.isOpen = true;
         this.coins += a.coins;
         playSound(Sound.Coin);
       }
+    }
+
+    if (a instanceof Projectile) {
+      let damage = 0;
+      if (b instanceof Character && a.owner !== b) {
+        damage = b.weapon?.damage || b.attack;
+      } else if (b instanceof Projectile) {
+        damage = b.damage;
+      }
+      a.hitpoint -= damage;
     }
 
     if (a instanceof Character) {
@@ -235,25 +271,34 @@ this.enemies.push(enemy);
           damage = 0;
         }
         isCut = !!b.weapon;
+      } else if (b instanceof Projectile && !b.isDead && b.owner !== a) {
+        damage = b.damage;
+        b.hitpoint -= damage;
+        isCut = b.isSharp;
       }
-      const dir = a.position[0] < b.position[0] ? -1 : 1;
-      const frontAttack = (a.faceForward && dir < 0) || (!a.faceForward && dir > 0);
-      const hit = a.damage(damage, frontAttack);
-      this.particles.submit(20, 0.3,
-        vec3.add(a.position, [-2, 3, -2]), vec3.add(a.position, [2, 5, 2]),
-        [dir < 0 ? -16 : -4, 0, -1], [dir < 0 ? 4 : 16, 6, 1],
-        hit ? [...HIT_COLOR, 1] : [0.8, 0.8, 0.8, 1]
-      );
-      vec3.set(a.velocity, dir * pushBack * damage * 24 * (hit ? 1 : 0.5), 0, (a.position[2] - b.position[2]) * 12 * (hit ? 1 : 0.5));
-      if (!hit) {
-        playSound(Sound.Block);
-      } else {
-        playSound(isCut ? Sound.Cut : Sound.Hit);
-      }
+      if (damage > 0) {
+        const dir = a.position[0] < b.position[0] ? -1 : 1;
+        const frontAttack = (a.faceForward && dir < 0) || (!a.faceForward && dir > 0);
+        const hit = a.damage(damage, frontAttack);
+        this.particles.submit(20, 0.3,
+          vec3.add(a.position, [-2, 3, -2]), vec3.add(a.position, [2, 5, 2]),
+          [dir < 0 ? -16 : -4, 0, -1], [dir < 0 ? 4 : 16, 6, 1],
+          hit ? [...HIT_COLOR, 1] : [0.8, 0.8, 0.8, 1]
+        );
+        vec3.set(a.velocity, dir * pushBack * damage * 24 * (hit ? 1 : 0.5), 0, (a.position[2] - b.position[2]) * 12 * (hit ? 1 : 0.5));
+        if (!hit) {
+          playSound(Sound.Block);
+        } else {
+          playSound(isCut ? Sound.Cut : Sound.Hit);
+        }
 
-      if (a.hitpoint <= 0 && a instanceof Enemy && b instanceof Character && b.isHero) {
-        this.coins = Math.min(MAX_COINS, this.coins + a.coins);
-        a.coins = 0;
+        if (a.hitpoint <= 0 && a instanceof Enemy && b instanceof Character && b.isHero) {
+          if (a.shield === Weapons.MONEYBAG) {
+            playSound(Sound.Coin);
+          }
+          this.coins = Math.min(MAX_COINS, this.coins + a.coins);
+          a.coins = 0;
+        }
       }
     }
   };

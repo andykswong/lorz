@@ -6,14 +6,16 @@ import { HitBoxWeaponSmall } from '../config';
 
 export class Enemy extends Character {
   public coins = 1;
-  public aggressive = 0.5;
-  public blockDuration = 2;
+  public aggressive = 0.6;
+  public blockDuration = 1;
   public fleeThreshold = 0.2;
   public target: Body | null = null;
   public currentFocus: Body | null = null;
   public lastAttackTime: number = 0;
+  public lastBlockTime: number = 0;
+  public dt: number = 0;
 
-  public act: (thisEnemy: Enemy, t: number) => void = defaultEnemyAction;
+  public act: (thisEnemy: Enemy, t: number, dt: number) => void = defaultEnemyAction;
 
   public constructor(
     hitpoint: number,  
@@ -23,23 +25,21 @@ export class Enemy extends Character {
   }
   
   public update(t: number = 0): void {
-    this.act(this, t);
+    this.dt += (t && this.lastTime) ? t - this.lastTime : 0;
+    if (this.dt >= 0.2) {
+      this.act(this, t, this.dt);
+      this.dt = 0;
+    }
     super.update(t);
   }
 }
- 
-export function defaultEnemyAction(enemy: Enemy, t: number): void {
-  if (Math.random() < 0.05) {
-    enemy.currentFocus = enemy.currentFocus ? null : enemy.target;
-  }
+
+export function defaultEnemyAction(enemy: Enemy, t: number, dt: number): void {
+  enemy.currentFocus = enemy.target;
 
   let nextAction: Action = Action.None;
 
-  if ((enemy.actions & Action.Block) && (t - enemy.lastAttackTime < enemy.blockDuration)) {
-    nextAction = nextAction | Action.Block;
-  }
-
-  const distX = enemy.position[0] - (enemy.currentFocus?.position[0] || -100);
+  const distX = enemy.position[0] - (enemy.currentFocus ? enemy.currentFocus.position[0] : -100);
 
   if (!enemy.currentFocus || enemy.currentFocus.isDead || Math.abs(distX) > 128) {
     if (Math.random() < 0.01 + ((enemy.actions & Action.Left) ? 0.05 : -0.04)) nextAction = nextAction | Action.Left;
@@ -54,17 +54,25 @@ export function defaultEnemyAction(enemy: Enemy, t: number): void {
   const hitRangeX = (enemy.weapon?.hitbox || HitBoxWeaponSmall).max[0];
   const hitRangeZ = (enemy.weapon?.hitbox || HitBoxWeaponSmall).max[2];
 
-  if (Math.abs(distX) <= hitRangeX && Math.abs(distZ) <= hitRangeZ) {
+  if (Math.abs(distZ) <= hitRangeZ) {
     if (t - enemy.lastAttackTime > enemy.attackDelay) {
-      if (!enemy.shield || Math.random() < enemy.aggressive) {
-        nextAction = (nextAction & ~Action.Block) | Action.Attack;
-      } else if (enemy.shield) {
+      if (enemy.shield && (t - enemy.lastBlockTime > enemy.blockDuration * 2) && (Math.random() < (1 - enemy.aggressive) / dt) && (
+        Math.abs(distX) <= hitRangeX ||
+        (enemy.currentFocus instanceof Character && enemy.currentFocus.weapon?.createProjectile)
+      )) {
         nextAction = nextAction | Action.Block;
+        enemy.lastBlockTime = t;
+      } else if (Math.abs(distX) <= hitRangeX) {
+        nextAction = (nextAction & ~Action.Block) | Action.Attack;
+        enemy.lastAttackTime = t;
       }
-      enemy.lastAttackTime = t;
     }
     (enemy.faceForward && distX > 0) && (nextAction = nextAction | Action.Left);
     (!enemy.faceForward && distX < 0) && (nextAction = nextAction | Action.Right);
+  }
+  
+  if ((enemy.actions & Action.Block) && (t - enemy.lastBlockTime < enemy.blockDuration)) {
+    nextAction = nextAction | Action.Block;
   }
 
   if (enemy.hitpoint / enemy.maxHitPoint <= enemy.fleeThreshold) {
