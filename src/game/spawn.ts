@@ -27,8 +27,9 @@ export class Spawner {
 
     let spawnCount = 0;
 
-    if (zrandom(0, 1) > 0.75) {
-      this.enemyList.push(createGoblin([zrandom(spawnPosX - 12, spawnPosX + 12), 0, zrandom(MIN[2], MAX[2])], hero));
+    if (zrandom(0, 1) > 0.8) {
+      const pos = Math.random() < 0.8 ? spawnPosX : hero.position[0] - 16;
+      this.enemyList.push(createGoblin([zrandom(pos - 12, pos + 12), 0, zrandom(MIN[2], MAX[2])], hero));
       ++spawnCount;
     }
 

@@ -137,7 +137,7 @@ export function createGoblin(position: ReadonlyVec3 = ORIGIN, target: Character 
   enemy.shield = Weapons.MONEYBAG;
   enemy.coins = Math.floor(hp + Math.random() * hp / 2);
   enemy.fleeThreshold = 1;
-  enemy.speed = 24;
+  enemy.speed = 16;
   vec3.copy(position, enemy.position);
   return enemy;
 }
