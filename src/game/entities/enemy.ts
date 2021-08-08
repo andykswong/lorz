@@ -41,7 +41,7 @@ export function defaultEnemyAction(enemy: Enemy, t: number, dt: number): void {
 
   const distX = enemy.position[0] - (enemy.currentFocus ? enemy.currentFocus.position[0] : -100);
 
-  if (!enemy.currentFocus || enemy.currentFocus.isDead || Math.abs(distX) > 128) {
+  if (!enemy.currentFocus || enemy.currentFocus.isDead || Math.abs(distX) > 48) {
     if (Math.random() < 0.01 + ((enemy.actions & Action.Left) ? 0.05 : -0.04)) nextAction = nextAction | Action.Left;
     if (Math.random() < 0.01 + ((enemy.actions & Action.Right) ? 0.05 : -0.04)) nextAction = nextAction | Action.Right;
     if (Math.random() < 0.01 + ((enemy.actions & Action.Up) ? 0.05 : -0.04)) nextAction = nextAction | Action.Up;

@@ -1,6 +1,6 @@
 import { RenderingDevice } from 'mugl';
 import { mat4, Mat4, translate, Vec3, vec3 } from 'munum';
-import { Body, simulate , OrthoCamera, ParticlesRenderer, Screen, SpritesRenderer, UIRenderer, UICamera } from '../core';
+import { Body, simulate, OrthoCamera, ParticlesRenderer, Screen, SpritesRenderer, UIRenderer, UICamera } from '../core';
 import { Background } from './graphics';
 import { LowRezJam2021Game } from './entry';
 import { createArrow, createBat, createDemonSkeleton, createGoblin, createHero, createMinotaur, createMinotaur2, createRat, createSkeleton, createSkeleton2, createSlime, createSlime2, createSlime3, createSnake, createSpider, Hero, HIT_COLOR, MAX_COINS, MIN, ORIGIN, TEXT_COLOR, UISprite, Weapons } from './config';
@@ -75,12 +75,12 @@ export class GameScreen implements Screen {
     this.enemies.length = 0;
 
     let enemy: Enemy;
-    /*
+
     enemy = createRat();
     enemy.target = this.hero;
     vec3.set(enemy.position, 12, 0, 8);
     this.enemies.push(enemy);
-    
+
     enemy = createBat();
     enemy.target = this.hero;
     vec3.set(enemy.position, -12, 0, 8);
@@ -93,53 +93,58 @@ export class GameScreen implements Screen {
 
     enemy = createSlime2();
     enemy.target = this.hero;
-    vec3.set(enemy.position, -18, 0, 16);
+    vec3.set(enemy.position, 32, 0, 16);
     this.enemies.push(enemy);
     enemy = createSlime3();
     enemy.target = this.hero;
-    vec3.set(enemy.position, -12, 0, 6);
+    vec3.set(enemy.position, 72, 0, -6);
     this.enemies.push(enemy);
 
     enemy = createSnake();
     enemy.target = this.hero;
-    vec3.set(enemy.position, 20, 0, 8);
+    vec3.set(enemy.position, 72, 0, 8);
     this.enemies.push(enemy);
-*/
 
-const chest = new Chest();
-vec3.set(chest.position, 20, 0, 8);
-this.items.push(chest);
+    let chest = new Chest();
+    vec3.set(chest.position, 60, 0, 8);
+    this.items.push(chest);
 
-this.items.push(createArrow([-20, 0, -8], true));
+    chest = new Chest();
+    vec3.set(chest.position, 128, 0, 8);
+    this.items.push(chest);
 
-enemy = createGoblin();
-enemy.target = this.hero;
-vec3.set(enemy.position, 0, 0, 16);
-this.enemies.push(enemy);
+    chest = new Chest();
+    vec3.set(chest.position, 224, 0, 8);
+    this.items.push(chest);
 
-enemy = createSpider();
-enemy.target = this.hero;
-vec3.set(enemy.position, 20, 0, 8);
-this.enemies.push(enemy);
+    enemy = createGoblin();
+    enemy.target = this.hero;
+    vec3.set(enemy.position, 16, 0, 16);
+    this.enemies.push(enemy);
+
+    enemy = createSpider();
+    enemy.target = this.hero;
+    vec3.set(enemy.position, 96, 0, 8);
+    this.enemies.push(enemy);
 
     const minotaur = createMinotaur();
     minotaur.target = this.hero;
-    vec3.set(minotaur.position, 12, 0, 8);
+    vec3.set(minotaur.position, 192, 0, 8);
     this.enemies.push(minotaur);
 
     const skel = createSkeleton();
     skel.target = this.hero;
-    vec3.set(skel.position, 24, 0, 24);
+    vec3.set(skel.position, 96, 0, 24);
     this.enemies.push(skel);
-    
+
     const skel3 = createSkeleton2();
     skel3.target = this.hero;
-    vec3.set(skel3.position, -12, 0, 12);
+    vec3.set(skel3.position, 205, 0, 12);
     this.enemies.push(skel3);
 
     const skel2 = createDemonSkeleton();
     skel2.target = this.hero;
-    vec3.set(skel2.position, 24, 0, -12);
+    vec3.set(skel2.position, 256, 0, -12);
     this.enemies.push(skel2);
   }
 
@@ -173,7 +178,7 @@ this.enemies.push(enemy);
       this.items.push(this.hero.projectile!);
       this.hero.projectile = null;
     }
-  
+
     for (let i = 0; i < this.enemies.length;) {
       if (this.enemies[i].isDead) {
         this.enemies[i] = this.enemies[this.enemies.length - 1];
@@ -186,7 +191,7 @@ this.enemies.push(enemy);
         ++i;
       }
     }
-  
+
     for (let i = 0; i < this.items.length;) {
       if (this.items[i].isDead || (this.items[i].position[0] <= MIN[0] && this.items[i].velocity[0] <= 0)) {
         this.items[i] = this.items[this.items.length - 1];
@@ -202,11 +207,11 @@ this.enemies.push(enemy);
     this.entities.push(...this.items);
 
     this.healHero(dt);
-  
+
     for (const entity of this.entities) {
       entity.update(t);
     }
-  
+
     simulate(dt, this.entities, this.onCollide);
 
     for (const entity of this.entities) {
