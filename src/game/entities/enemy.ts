@@ -2,10 +2,12 @@ import { ReadonlyVec4 } from 'munum';
 import { Action } from '../action';
 import { Body } from '../../core';
 import { Character } from './char';
+import { HitBoxWeaponSmall } from '../config';
 
 export class Enemy extends Character {
   public coins = 1;
-  public attackDelay = 1;
+  public aggressive = 0.5;
+  public blockDuration = 2;
   public fleeThreshold = 0.2;
   public target: Body | null = null;
   public currentFocus: Body | null = null;
@@ -31,8 +33,15 @@ export function defaultEnemyAction(enemy: Enemy, t: number): void {
     enemy.currentFocus = enemy.currentFocus ? null : enemy.target;
   }
 
-  if (!enemy.currentFocus || enemy.currentFocus.isDead) {
-    let nextAction: Action = Action.None;
+  let nextAction: Action = Action.None;
+
+  if ((enemy.actions & Action.Block) && (t - enemy.lastAttackTime < enemy.blockDuration)) {
+    nextAction = nextAction | Action.Block;
+  }
+
+  const distX = enemy.position[0] - (enemy.currentFocus?.position[0] || -100);
+
+  if (!enemy.currentFocus || enemy.currentFocus.isDead || Math.abs(distX) > 128) {
     if (Math.random() < 0.01 + ((enemy.actions & Action.Left) ? 0.05 : -0.04)) nextAction = nextAction | Action.Left;
     if (Math.random() < 0.01 + ((enemy.actions & Action.Right) ? 0.05 : -0.04)) nextAction = nextAction | Action.Right;
     if (Math.random() < 0.01 + ((enemy.actions & Action.Up) ? 0.05 : -0.04)) nextAction = nextAction | Action.Up;
@@ -41,29 +50,32 @@ export function defaultEnemyAction(enemy: Enemy, t: number): void {
     return;
   }
 
-  enemy.actions = Action.None;
-
-  const distX = enemy.position[0] - enemy.currentFocus.position[0];
   const distZ = enemy.position[2] - enemy.currentFocus.position[2];
-  const hitRangeX = enemy.weapon?.hitbox.max[0] || 0;
-  const hitRangeZ = enemy.weapon?.hitbox.max[2] || 0;
+  const hitRangeX = (enemy.weapon?.hitbox || HitBoxWeaponSmall).max[0];
+  const hitRangeZ = (enemy.weapon?.hitbox || HitBoxWeaponSmall).max[2];
 
   if (Math.abs(distX) <= hitRangeX && Math.abs(distZ) <= hitRangeZ) {
-    if (!t || t - enemy.lastAttackTime > enemy.attackDelay) {
-      enemy.actions = enemy.actions | Action.Attack;
+    if (t - enemy.lastAttackTime > enemy.attackDelay) {
+      if (!enemy.shield || Math.random() < enemy.aggressive) {
+        nextAction = (nextAction & ~Action.Block) | Action.Attack;
+      } else if (enemy.shield) {
+        nextAction = nextAction | Action.Block;
+      }
       enemy.lastAttackTime = t;
     }
-    (enemy.faceForward && distX > 0) && (enemy.actions = enemy.actions | Action.Left);
-    (!enemy.faceForward && distX < 0) && (enemy.actions = enemy.actions | Action.Right);
+    (enemy.faceForward && distX > 0) && (nextAction = nextAction | Action.Left);
+    (!enemy.faceForward && distX < 0) && (nextAction = nextAction | Action.Right);
   }
 
   if (enemy.hitpoint / enemy.maxHitPoint <= enemy.fleeThreshold) {
     if (Math.abs(distX) < 64) {
-      enemy.actions = enemy.actions | (distX > 0 ? Action.Right : Action.Left);
+      nextAction = nextAction | (distX > 0 ? Action.Right : Action.Left);
     }
-    enemy.actions = enemy.actions | (distZ > 0 ? Action.Down : Action.Up);
-  } else if (Math.random() < 0.5) {
-    (Math.abs(distZ) > hitRangeZ) && (enemy.actions = enemy.actions | (distZ > 0 ? Action.Up : Action.Down));
-    (Math.abs(distX) > hitRangeX) && (enemy.actions = enemy.actions | (distX > 0 ? Action.Left : Action.Right));
+    nextAction = nextAction | (distZ > 0 ? Action.Down : Action.Up);
+  } else {
+    (Math.abs(distZ) > hitRangeZ) && (nextAction = nextAction | (distZ > 0 ? Action.Up : Action.Down));
+    (Math.abs(distX) > hitRangeX) && (nextAction = nextAction | (distX > 0 ? Action.Left : Action.Right));
   }
+
+  enemy.actions = nextAction;
 }

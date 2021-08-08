@@ -7,7 +7,8 @@ export class Weapon {
     public readonly sprite: ReadonlyVec4,
     public readonly hitbox: ReadonlyAABB = HitBoxNone,
     public readonly speed: number = 0.5,
-    public readonly twoHanded: boolean = false
+    public readonly twoHanded: boolean = false,
+    public readonly pushBack: number = 1
   ) {
   }
 }

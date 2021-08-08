@@ -10,6 +10,8 @@ import { Sound } from '../sound';
 export class Character implements Body, Entity {
   public readonly sprite: CharacterSprite;
   public readonly velocity: Vec3 = vec3.create();
+  public attack: number = 1;
+  public attackDelay: number = 1;
   public speed: number = 24;
   public readonly friction: number = 16;
   public hitbox: ReadonlyAABB = HitBoxChar;

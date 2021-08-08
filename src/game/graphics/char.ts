@@ -17,7 +17,7 @@ export class CharacterSprite {
   private alpha: number = 1;
 
   public constructor(
-    public readonly body: ReadonlyVec4,
+    public body: ReadonlyVec4,
     public weapon: ReadonlyVec4 | null = null,
     public shield: ReadonlyVec4 | null = null,
     public armor: ReadonlyVec4 | null = null,

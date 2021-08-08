@@ -1,4 +1,4 @@
-import { ReadonlyVec3, vec3 } from 'munum';
+import { ReadonlyVec3, ReadonlyVec4, vec3 } from 'munum';
 import { Character, Weapon } from '../entities';
 import { Enemy } from '../entities/enemy';
 import { ORIGIN } from './config';
@@ -7,13 +7,14 @@ import { Sprite } from './sprite';
 import { Hero, Unlockable } from './unlockables';
 
 export const Weapons = {
-  BOW: new Weapon(0, Sprite.BOW, HitBoxNone, 1, true),
+  BOW: new Weapon(2, Sprite.BOW, HitBoxNone, 0.6, true, 4),
   AXE: new Weapon(3, Sprite.AXE, HitBoxWeaponNormal),
   KNIFE: new Weapon(2, Sprite.KNIFE, HitBoxWeaponSmall, 0.2),
   SWORD: new Weapon(5, Sprite.SWORD, HitBoxWeaponNormal),
   GREATAXE: new Weapon(8, Sprite.GREATAXE, HitBoxWeaponLarge, 1),
   SPEAR: new Weapon(8, Sprite.SPEAR, HitBoxWeaponXLarge, 0.7, true),
   DOUBLEAXE: new Weapon(12, Sprite.DOUBLEAXE, HitBoxWeaponLarge, 1, true),
+  FIRESTAFF: new Weapon(2, Sprite.FIRESTAFF, HitBoxNone, 0.6, true, 4),
   SMALLSHIELD: new Weapon(3, Sprite.SMALLSHIELD),
   WOODENSHIELD: new Weapon(4, Sprite.WOODENSHIELD),
   STEELSHIELD: new Weapon(6, Sprite.STEELSHIELD)
@@ -21,12 +22,38 @@ export const Weapons = {
 
 const HeroHP: Record<Hero, number> = {
   [Hero.KNIGHT]: 50,
+  [Hero.ROGUE]: 40,
+  [Hero.MAGE]: 30,
+};
+
+const HeroSpeed: Record<Hero, number> = {
+  [Hero.KNIGHT]: 24,
+  [Hero.ROGUE]: 32,
+  [Hero.MAGE]: 20,
+};
+
+const HeroArmor: Record<Hero, ReadonlyVec4> = {
+  [Hero.KNIGHT]: Sprite.KNIGHTHELM,
+  [Hero.ROGUE]: Sprite.ROBINHOOD,
+  [Hero.MAGE]: Sprite.ROBINHOOD,
+};
+
+const HeroCape: Record<Hero, ReadonlyVec4 | null> = {
+  [Hero.KNIGHT]: Sprite.CAPE0,
+  [Hero.ROGUE]: null,
+  [Hero.MAGE]: Sprite.WIZARD,
+};
+
+const HeroStartWeapon: Record<Hero, Weapon> = {
+  [Hero.KNIGHT]: Weapons.AXE,
+  [Hero.ROGUE]: Weapons.KNIFE,
+  [Hero.MAGE]: Weapons.FIRESTAFF,
 };
 
 export function createHero(hero: Hero, unlock: Unlockable = 0, position: ReadonlyVec3 = ORIGIN): Character {
   let char: Character;
 
-  let armor = Sprite.KNIGHTHELM;
+  let armor = HeroArmor[hero];
   if (unlock & Unlockable.ARMOR) {
     armor = Sprite.CRUSADER;
   } 
@@ -35,15 +62,18 @@ export function createHero(hero: Hero, unlock: Unlockable = 0, position: Readonl
     HeroHP[hero],
     Sprite.HERO,
     armor,
-    Sprite.CAPE0,
+    HeroCape[hero],
     true
   );
 
-  char.weapon = Weapons.AXE;
+  char.speed = HeroSpeed[hero];
+  char.weapon = HeroStartWeapon[hero];
   char.shield = null;
   vec3.copy(position, char.position);
 
-  if (unlock & Unlockable.SPEAR) {
+  if (unlock & Unlockable.BOW) {
+    char.weapon = Weapons.BOW;
+  } else if (unlock & Unlockable.SPEAR) {
     char.weapon = Weapons.SPEAR;
   } else if (unlock & Unlockable.SWORD) {
     char.weapon = Weapons.SWORD;
@@ -60,11 +90,75 @@ export function createHero(hero: Hero, unlock: Unlockable = 0, position: Readonl
   return char;
 }
 
+export function createRat(hp: number = 5, position: ReadonlyVec3 = ORIGIN): Enemy {
+  const enemy = new Enemy(hp, Sprite.RAT);
+  enemy.coins = 2;
+  enemy.fleeThreshold = 0.5;
+  enemy.speed = 12;
+  vec3.copy(position, enemy.position);
+  return enemy;
+}
+
+export function createBat(hp: number = 7, position: ReadonlyVec3 = ORIGIN): Enemy {
+  const enemy = new Enemy(hp, Sprite.BAT);
+  enemy.attack = 2;
+  enemy.coins = 4;
+  enemy.fleeThreshold = 0.5;
+  enemy.speed = 24;
+  vec3.copy(position, enemy.position);
+  return enemy;
+}
+
+export function createSpider(hp: number = 10, position: ReadonlyVec3 = ORIGIN): Enemy {
+  const enemy = new Enemy(hp, Sprite.SPIDER);
+  enemy.attack = 2;
+  enemy.coins = 6;
+  enemy.fleeThreshold = 0.5;
+  enemy.attackDelay = 0.5;
+  enemy.speed = 32;
+  vec3.copy(position, enemy.position);
+  return enemy;
+}
+
+export function createSnake(hp: number = 10, position: ReadonlyVec3 = ORIGIN): Enemy {
+  const enemy = new Enemy(hp, Sprite.SNAKE);
+  enemy.attack = 3;
+  enemy.coins = 10;
+  enemy.fleeThreshold = 0;
+  enemy.attackDelay = 0.2;
+  enemy.speed = 60;
+  vec3.copy(position, enemy.position);
+  return enemy;
+}
+
+export function createSlime(hp: number = 30, position: ReadonlyVec3 = ORIGIN): Enemy {
+  const enemy = new Enemy(hp, Sprite.SLIME);
+  enemy.attack = 2;
+  enemy.coins = 8;
+  enemy.fleeThreshold = 0;
+  enemy.attackDelay = 1;
+  enemy.speed = 4;
+  vec3.copy(position, enemy.position);
+  return enemy;
+}
+
+export function createSlime2(hp: number = 40, position: ReadonlyVec3 = ORIGIN): Enemy {
+  const enemy = createSlime(hp, position);
+  enemy.sprite.body = Sprite.BLUESLIME;
+  return enemy;
+}
+
+export function createSlime3(hp: number = 50, position: ReadonlyVec3 = ORIGIN): Enemy {
+  const enemy = createSlime(hp, position);
+  enemy.sprite.body = Sprite.REDSLIME;
+  return enemy;
+}
+
 export function createMinotaur(hp: number = 70, position: ReadonlyVec3 = ORIGIN): Enemy {
   const enemy = new Enemy(hp, Sprite.MINOTAUR);
   enemy.weapon = Weapons.GREATAXE;
   enemy.shield = Weapons.STEELSHIELD;
-  enemy.coins = 35;
+  enemy.coins = 50;
   enemy.fleeThreshold = 0;
   enemy.attackDelay = 0.5;
   enemy.speed = 16;
@@ -79,11 +173,12 @@ export function createMinotaur2(hp: number = 70, position: ReadonlyVec3 = ORIGIN
   return enemy;
 }
 
-export function createSkeleton(hp: number = 10, position: ReadonlyVec3 = ORIGIN): Enemy {
+export function createSkeleton(hp: number = 15, position: ReadonlyVec3 = ORIGIN): Enemy {
   const enemy = new Enemy(hp, Sprite.SKELETON);
   enemy.weapon = Weapons.AXE;
   enemy.shield = Weapons.SMALLSHIELD;
-  enemy.coins = 5;
+  enemy.coins = 10;
+  enemy.aggressive = 0.3;
   enemy.fleeThreshold = 0.5;
   enemy.attackDelay = 2;
   enemy.speed = 8;
@@ -91,7 +186,7 @@ export function createSkeleton(hp: number = 10, position: ReadonlyVec3 = ORIGIN)
   return enemy;
 }
 
-export function createSkeleton2(hp: number = 10, position: ReadonlyVec3 = ORIGIN): Enemy {
+export function createSkeleton2(hp: number = 15, position: ReadonlyVec3 = ORIGIN): Enemy {
   const enemy = createSkeleton(hp, position);
   enemy.weapon = Weapons.KNIFE;
   enemy.shield = null;
@@ -102,9 +197,10 @@ export function createDemonSkeleton(hp: number = 30, position: ReadonlyVec3 = OR
   const enemy = new Enemy(hp, Sprite.DEMONSKELETON);
   enemy.weapon = Weapons.SWORD;
   enemy.shield = Weapons.WOODENSHIELD;
-  enemy.coins = 45;
+  enemy.coins = 60;
+  enemy.aggressive = 0.8;
   enemy.fleeThreshold = 0;
-  enemy.attackDelay = 0;
+  enemy.attackDelay = 0.2;
   enemy.speed = 48;
   vec3.copy(position, enemy.position);
   return enemy;

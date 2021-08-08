@@ -3,8 +3,8 @@ import { mat4, Mat4, translate, Vec3, vec3 } from 'munum';
 import { Body, simulate , OrthoCamera, ParticlesRenderer, Screen, SpritesRenderer, UIRenderer, UICamera } from '../core';
 import { Background } from './graphics';
 import { LowRezJam2021Game } from './entry';
-import { createDemonSkeleton, createHero, createMinotaur, createMinotaur2, createSkeleton, createSkeleton2, Hero, HIT_COLOR, MAX_COINS, TEXT_COLOR, UISprite, Unlockable } from './config';
-import { Character, Entity } from './entities';
+import { createBat, createDemonSkeleton, createHero, createMinotaur, createMinotaur2, createRat, createSkeleton, createSkeleton2, createSlime, createSlime2, createSlime3, createSnake, createSpider, Hero, HIT_COLOR, MAX_COINS, TEXT_COLOR, UISprite } from './config';
+import { Character, Chest, Entity } from './entities';
 import { Action, mapKeyToAction } from './action';
 import { playSound, Sound } from './sound';
 import { Enemy } from './entities/enemy';
@@ -34,6 +34,7 @@ export class GameScreen implements Screen {
   private hero: Character = createHero(Hero.KNIGHT);
   private heroHealTimer: number = 0;
   private enemies: Enemy[] = [];
+  private items: (Body & Entity)[] = [];
   private actions: Action = Action.None;
 
   private entities: (Body & Entity)[] = [];
@@ -67,9 +68,52 @@ export class GameScreen implements Screen {
     Sound.Game.play();
 
     this.hero = createHero(this.game.selectedHero, this.game.selectedUnlocks);
+    this.hero.velocity[0] = this.hero.speed;
+
     this.enemies.length = 0;
 
-    const minotaur = createMinotaur2();
+    let enemy: Enemy;
+    /*
+    enemy = createRat();
+    enemy.target = this.hero;
+    vec3.set(enemy.position, 12, 0, 8);
+    this.enemies.push(enemy);
+    
+    enemy = createBat();
+    enemy.target = this.hero;
+    vec3.set(enemy.position, -12, 0, 8);
+    this.enemies.push(enemy);
+
+    enemy = createSlime();
+    enemy.target = this.hero;
+    vec3.set(enemy.position, -12, 0, 16);
+    this.enemies.push(enemy);
+
+    enemy = createSlime2();
+    enemy.target = this.hero;
+    vec3.set(enemy.position, -18, 0, 16);
+    this.enemies.push(enemy);
+    enemy = createSlime3();
+    enemy.target = this.hero;
+    vec3.set(enemy.position, -12, 0, 6);
+    this.enemies.push(enemy);
+
+    enemy = createSnake();
+    enemy.target = this.hero;
+    vec3.set(enemy.position, 20, 0, 8);
+    this.enemies.push(enemy);
+*/
+
+const chest = new Chest();
+vec3.set(chest.position, 20, 0, 8);
+this.items.push(chest);
+
+enemy = createSpider();
+enemy.target = this.hero;
+vec3.set(enemy.position, 20, 0, 8);
+this.enemies.push(enemy);
+
+    const minotaur = createMinotaur();
     minotaur.target = this.hero;
     vec3.set(minotaur.position, 12, 0, 8);
     this.enemies.push(minotaur);
@@ -116,10 +160,20 @@ export class GameScreen implements Screen {
     this.bg.render(this.camera.viewProj);
 
     this.hero.actions = this.actions;
+  
+    for (let i = 0; i < this.enemies.length;) {
+      if (this.enemies[i].isDead) {
+        this.enemies[i] = this.enemies[this.enemies.length - 1];
+        this.enemies.pop();
+      } else {
+        ++i;
+      }
+    }
 
     this.entities.length = 0;
     this.entities.push(this.hero);
     this.entities.push(...this.enemies);
+    this.entities.push(...this.items);
 
     this.healHero(dt);
   
@@ -162,11 +216,21 @@ export class GameScreen implements Screen {
   }
 
   public onCollide = (a: Body, b: Body, sensor: number): void => {
+    if (a instanceof Chest && !a.isOpen) {
+      if (b instanceof Character && b.isHero) {
+        a.isOpen = true;
+        this.coins += a.coins;
+        playSound(Sound.Coin);
+      }
+    }
+
     if (a instanceof Character) {
-      let damage = 1;
+      let damage = 0;
+      let pushBack = 0;
       let isCut = false;
       if (b instanceof Character) {
-        damage = b.weapon?.damage || 1;
+        damage = b.weapon?.damage || b.attack;
+        pushBack = b.weapon?.pushBack || 1;
         if (a instanceof Enemy && b instanceof Enemy) {
           damage = 0;
         }
@@ -180,7 +244,7 @@ export class GameScreen implements Screen {
         [dir < 0 ? -16 : -4, 0, -1], [dir < 0 ? 4 : 16, 6, 1],
         hit ? [...HIT_COLOR, 1] : [0.8, 0.8, 0.8, 1]
       );
-      vec3.set(a.velocity, dir * damage * 24 * (hit ? 1 : 0.5), 0, (a.position[2] - b.position[2]) * 12 * (hit ? 1 : 0.5));
+      vec3.set(a.velocity, dir * pushBack * damage * 24 * (hit ? 1 : 0.5), 0, (a.position[2] - b.position[2]) * 12 * (hit ? 1 : 0.5));
       if (!hit) {
         playSound(Sound.Block);
       } else {
@@ -236,6 +300,9 @@ export class GameScreen implements Screen {
   }
 
   private healHero(delta: number): void {
+    if (this.ended) {
+      return;
+    }
     this.heroHealTimer += delta;
     if (this.heroHealTimer >= 1 && this.hero.hitpoint < this.hero.maxHitPoint) {
       this.hero.hitpoint++;
