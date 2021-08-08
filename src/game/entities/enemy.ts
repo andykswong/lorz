@@ -41,7 +41,7 @@ export function defaultEnemyAction(enemy: Enemy, t: number, dt: number): void {
 
   const distX = enemy.position[0] - (enemy.currentFocus ? enemy.currentFocus.position[0] : -100);
 
-  if (!enemy.currentFocus || enemy.currentFocus.isDead || Math.abs(distX) > 128) {
+  if (!enemy.currentFocus || enemy.currentFocus.isDead || Math.abs(distX) > 48) {
     if (Math.random() < 0.01 + ((enemy.actions & Action.Left) ? 0.05 : -0.04)) nextAction = nextAction | Action.Left;
     if (Math.random() < 0.01 + ((enemy.actions & Action.Right) ? 0.05 : -0.04)) nextAction = nextAction | Action.Right;
     if (Math.random() < 0.01 + ((enemy.actions & Action.Up) ? 0.05 : -0.04)) nextAction = nextAction | Action.Up;
@@ -58,7 +58,7 @@ export function defaultEnemyAction(enemy: Enemy, t: number, dt: number): void {
     if (t - enemy.lastAttackTime > enemy.attackDelay) {
       if (enemy.shield && (t - enemy.lastBlockTime > enemy.blockDuration * 2) && (Math.random() < (1 - enemy.aggressive) / dt) && (
         Math.abs(distX) <= hitRangeX ||
-        (enemy.currentFocus instanceof Character && enemy.currentFocus.weapon?.createProjectile)
+        (enemy.currentFocus instanceof Character && enemy.currentFocus.weapon?.createProjectile && Math.abs(distX) < 64)
       )) {
         nextAction = nextAction | Action.Block;
         enemy.lastBlockTime = t;
@@ -76,7 +76,7 @@ export function defaultEnemyAction(enemy: Enemy, t: number, dt: number): void {
   }
 
   if (enemy.hitpoint / enemy.maxHitPoint <= enemy.fleeThreshold) {
-    if (Math.abs(distX) < 64) {
+    if (Math.abs(distX) < 64 && !(nextAction & Action.Block)) {
       nextAction = nextAction | (distX > 0 ? Action.Right : Action.Left);
     }
     nextAction = nextAction | (distZ > 0 ? Action.Down : Action.Up);
