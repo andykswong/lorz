@@ -1,4 +1,4 @@
-import { Vec3, ReadonlyAABB, ReadonlyVec4 } from 'munum';
+import { Vec3, ReadonlyAABB, ReadonlyVec4, vec3 } from 'munum';
 import { Body, SpritesRenderer } from '../../core';
 import { HitBoxChar } from '../config';
 import { Character } from './char';
@@ -6,6 +6,7 @@ import { Entity } from './entity';
 
 export class Projectile implements Body, Entity {
   public readonly position: Vec3 = [0, 0, 0];
+  public readonly initialVelocity: Vec3 = [0, 0, 0];
   public readonly velocity: Vec3 = [0, 0, 0];
   public owner: Character | null = null;
   public faceForward: boolean = false;
@@ -19,7 +20,7 @@ export class Projectile implements Body, Entity {
 
   public constructor(
     public sprite: ReadonlyVec4,
-    public lifeTime: number = 5
+    public lifeTime: number = 3
   ) {
   }
 
@@ -31,6 +32,8 @@ export class Projectile implements Body, Entity {
       this.isDead = true;
       return;
     }
+
+    vec3.copy(this.initialVelocity, this.velocity);
 
     this.sensors[0] = this.hitbox;
     if (this.velocity[0]) {

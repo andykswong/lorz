@@ -6,7 +6,7 @@ import { HitBoxWeaponSmall } from '../config';
 
 export class Enemy extends Character {
   public coins = 1;
-  public aggressive = 0.6;
+  public aggressive = 0.7;
   public blockDuration = 1;
   public fleeThreshold = 0.2;
   public target: Body | null = null;
@@ -51,8 +51,8 @@ export function defaultEnemyAction(enemy: Enemy, t: number, dt: number): void {
   }
 
   const distZ = enemy.position[2] - enemy.currentFocus.position[2];
-  const hitRangeX = (enemy.weapon?.hitbox || HitBoxWeaponSmall).max[0];
-  const hitRangeZ = (enemy.weapon?.hitbox || HitBoxWeaponSmall).max[2];
+  const hitRangeX = (enemy.weapon?.hitbox || HitBoxWeaponSmall).max[0] + 2;
+  const hitRangeZ = (enemy.weapon?.hitbox || HitBoxWeaponSmall).max[2] + 2;
 
   if (Math.abs(distZ) <= hitRangeZ) {
     if (t - enemy.lastAttackTime > enemy.attackDelay) {

@@ -36,7 +36,7 @@ varying vec4 vColor;
 varying float alpha;
 
 void main () {
-  vec2 uv = vec2((vQuad.x + vUv.x * vQuad.z) / texSize.x, (vQuad.y + vUv.y * vQuad.w) / texSize.y);
+  vec2 uv = vec2((vQuad.x + clamp(vUv.x, 0.01, 0.99) * vQuad.z) / texSize.x, (vQuad.y + clamp(vUv.y, 0.01, 0.99) * vQuad.w) / texSize.y);
   vec4 color = texture2D(tex, uv);
   if (color.a * alpha < 0.1) {
     discard;

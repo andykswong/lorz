@@ -126,14 +126,16 @@ export class StartScreen implements Screen {
     }
 
     if (action === Action.Block) {
+      const hero = UnlockTable[this.curretHero].hero;
+
       if (this.canBuyCurrent()) {
         if (!this.curretUnlock) {
-          this.save.unlockHero(this.selectedHero = UnlockTable[this.curretHero].hero);
+          this.save.unlockHero(this.selectedHero = hero);
           this.save.coins = this.save.coins - UnlockTable[this.curretHero].coins;
           this.selectedUnlocks = 0;
         } else {
           const unlock = UnlockTable[this.curretHero].unlocks[this.curretUnlock - 1];
-          if (this.selectedHero === UnlockTable[this.curretHero].hero) {
+          if (this.selectedHero === hero) {
             this.selectedUnlocks = this.selectedUnlocks & (~(unlock.exclude || 0));
             this.selectedUnlocks = this.selectedUnlocks | unlock.type;
           }
@@ -142,14 +144,14 @@ export class StartScreen implements Screen {
         }
       } else {
         if (!this.curretUnlock) {
-          const hero = UnlockTable[this.curretHero].hero;
           if (this.selectedHero !== hero && this.save.isHeroUnlocked(hero)) {
             this.selectedHero = hero;
             this.selectedUnlocks = 0;
           }
         } else {
           const unlock = UnlockTable[this.curretHero].unlocks[this.curretUnlock - 1];
-          if (this.selectedHero === UnlockTable[this.curretHero].hero && this.save.isUnlocked(unlock.type)) {
+          if (this.save.isHeroUnlocked(hero) && this.save.isUnlocked(unlock.type)) {
+            this.selectedHero = hero;
             this.selectedUnlocks = this.selectedUnlocks & (~(unlock.exclude || 0));
             this.selectedUnlocks = this.selectedUnlocks ^ unlock.type;
           }

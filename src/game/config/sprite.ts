@@ -57,10 +57,10 @@ export const Sprite: Record<string, ReadonlyVec4> = {
   CAPE0: [48, 40, 8, 8],
   CAPE1: [56, 40, 8, 8],
 
-  ARROW: [64, 16, 8, 8],
-  FIREBALL: [72, 16, 8, 8],
-  ICEBALL: [80, 16, 8, 8],
-  HEAL: [88, 16, 8, 8],
+  ARROW: [64, 16, 8, 7],
+  FIREBALL: [72, 16, 8, 7],
+  ICEBALL: [80, 16, 8, 7],
+  HEAL: [88, 16, 8, 7],
 
   CHEST: [48, 32, 8, 8],
   CHESTOPEN: [56, 32, 8, 8],

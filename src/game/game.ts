@@ -297,7 +297,9 @@ export class GameScreen implements Screen {
           playSound(isCut ? Sound.Cut : Sound.Hit);
         }
 
-        if (a.hitpoint <= 0 && a instanceof Enemy && b instanceof Character && b.isHero) {
+        if (a.hitpoint <= 0 && a instanceof Enemy &&
+          ((b instanceof Character && b.isHero) || b instanceof Projectile && b.owner?.isHero)
+        ) {
           if (a.shield === Weapons.MONEYBAG) {
             playSound(Sound.Coin);
           }

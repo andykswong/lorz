@@ -223,7 +223,7 @@ export function createArrow(position: ReadonlyVec3, faceForward: boolean): Proje
   proj.lifeTime = 2;
   proj.damage = 4;
   vec3.copy(position, proj.position);
-  proj.velocity[0] = (faceForward ? 1 : -1) * 96;
+  proj.initialVelocity[0] = (faceForward ? 1 : -1) * 96;
   proj.isSharp = true;
   return proj;
 }
@@ -232,7 +232,7 @@ export function createFireball(position: ReadonlyVec3, faceForward: boolean): Pr
   const proj = new Projectile(Sprite.FIREBALL);
   proj.damage = 6;
   vec3.copy(position, proj.position);
-  proj.velocity[0] = (faceForward ? 1 : -1) * 40;
+  proj.initialVelocity[0] = (faceForward ? 1 : -1) * 40;
 
   return proj;
 }

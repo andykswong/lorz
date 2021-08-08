@@ -61,6 +61,7 @@ export class Character implements Body, Entity {
       this.sensors.push(this._weapon?.hitbox || HitBoxWeaponSmall);
       if (this.weapon?.createProjectile) {
         const proj = this.weapon.createProjectile(this.position, this.faceForward);
+        proj.initialVelocity[2] = this.velocity[2];
         proj.owner = this;
         this.projectile = proj;
       }
@@ -90,7 +91,7 @@ export class Character implements Body, Entity {
 
     if (this.isHero && this.sprite.isWalking && (!wasWalking || Sound.Footstep.ended)) {
       Sound.Footstep.currentTime = 0;
-      Sound.Footstep.volume = 0.1;
+      Sound.Footstep.volume = 0.05;
       Sound.Footstep.play();
     }
 

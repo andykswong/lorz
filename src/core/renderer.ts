@@ -1,4 +1,4 @@
-import { BlendFactor, Buffer, CompareFunc, FilterMode, MinFilterMode, Pipeline, ReadonlyColor, RenderingDevice, RenderPass, ShaderType, Texture, UniformFormat, UniformType, Usage, VertexFormat } from 'mugl';
+import { AddressMode, BlendFactor, Buffer, CompareFunc, FilterMode, MinFilterMode, Pipeline, ReadonlyColor, RenderingDevice, RenderPass, ShaderType, Texture, UniformFormat, UniformType, Usage, VertexFormat } from 'mugl';
 import { array, ReadonlyMat4, ReadonlyVec3, ReadonlyVec4 } from 'munum';
 import { toVertices, Quad } from './model';
 import { SPRITE_FS, SPRITE_VS } from './shaders';
@@ -46,6 +46,8 @@ export class SpritesRenderer {
       width: 128,
       height: 64
     }, {
+      wrapU: AddressMode.Clamp,
+      wrapV: AddressMode.Clamp,
       minFilter: MinFilterMode.Nearest,
       magFilter: FilterMode.Nearest
     }).data({
