@@ -16,7 +16,8 @@ export const Armors = {
 } as const;
 
 export const Weapons = {
-  BOW: new Weapon(2, Sprite.BOW, HitBoxWeaponLarge, 0.6, true, 4, true, createArrow),
+  BOW: new Weapon(2, Sprite.BOW, HitBoxWeaponNormal, 0.6, true, 4, true, createArrow),
+  SHORTBOW: new Weapon(1, Sprite.BOW, HitBoxWeaponNormal, 0.6, true, 4, true, createShortArrow),
   AXE: new Weapon(3, Sprite.AXE, HitBoxWeaponNormal),
   KNIFE: new Weapon(2, Sprite.KNIFE, HitBoxWeaponSmall, 0.2),
   SWORD: new Weapon(5, Sprite.SWORD, HitBoxWeaponNormal),
@@ -145,7 +146,7 @@ export function createSpider(position: ReadonlyVec3 = ORIGIN, target: Character 
   enemy.attack = 2;
   enemy.coins = 6;
   enemy.fleeThreshold = 0.5;
-  enemy.attackDelay = 0.5;
+  enemy.attackDelay = 0.8;
   enemy.speed = 32;
   vec3.copy(position, enemy.position);
   return enemy;
@@ -168,7 +169,7 @@ export function createSnake(position: ReadonlyVec3 = ORIGIN, target: Character |
   enemy.attack = 3;
   enemy.coins = 18;
   enemy.fleeThreshold = 0;
-  enemy.attackDelay = 0.2;
+  enemy.attackDelay = 0.3;
   enemy.speed = 60;
   vec3.copy(position, enemy.position);
   return enemy;
@@ -220,6 +221,15 @@ export function createMinotaur2(position: ReadonlyVec3 = ORIGIN, target: Charact
   return enemy;
 }
 
+export function createMinotaurArcher(position: ReadonlyVec3 = ORIGIN, target: Character | null = null, hp: number = 90): Enemy {
+  const enemy = createMinotaur(position, target, hp);
+  enemy.attackDelay = 1;
+  enemy.coins = 60;
+  enemy.weapon = Weapons.BOW;
+  enemy.shield = null;
+  return enemy;
+}
+
 export function createSkeleton(position: ReadonlyVec3 = ORIGIN, target: Character | null = null, hp: number = 25): Enemy {
   const enemy = new Enemy(hp, Sprite.SKELETON);
   enemy.target = target;
@@ -240,12 +250,28 @@ export function createSkeleton2(position: ReadonlyVec3 = ORIGIN, target: Charact
   return enemy;
 }
 
+export function createSkeletonArcher(position: ReadonlyVec3 = ORIGIN, target: Character | null = null, hp: number = 20): Enemy {
+  const enemy = createSkeleton(position, target, hp);
+  enemy.coins = 20;
+  enemy.weapon = Weapons.SHORTBOW;
+  enemy.shield = null;
+  return enemy;
+}
+
+export function createSkeletonMage(position: ReadonlyVec3 = ORIGIN, target: Character | null = null, hp: number = 20): Enemy {
+  const enemy = createSkeleton(position, target, hp);
+  enemy.coins = 20;
+  enemy.weapon = Weapons.FIRESTAFF;
+  enemy.shield = null;
+  return enemy;
+}
+
 export function createDemonSkeleton(position: ReadonlyVec3 = ORIGIN, target: Character | null = null, hp: number = 70): Enemy {
   const enemy = new Enemy(hp, Sprite.DEMONSKELETON);
   enemy.target = target;
   enemy.weapon = Weapons.SWORD;
   enemy.shield = Weapons.WOODENSHIELD;
-  enemy.coins = 60;
+  enemy.coins = 80;
   enemy.aggressive = 0.8;
   enemy.fleeThreshold = 0;
   enemy.attackDelay = 0.2;
@@ -261,6 +287,17 @@ export function createArrow(position: ReadonlyVec3, faceForward: boolean = true)
   proj.effect = Effect.Pushback;
   vec3.copy(position, proj.position);
   proj.initialVelocity[0] = (faceForward ? 1 : -1) * 96;
+  proj.isSharp = true;
+  return proj;
+}
+
+export function createShortArrow(position: ReadonlyVec3, faceForward: boolean = true): Projectile {
+  const proj = new Projectile(Sprite.ARROW);
+  proj.lifeTime = 0.8;
+  proj.damage = 4;
+  proj.effect = Effect.Pushback;
+  vec3.copy(position, proj.position);
+  proj.initialVelocity[0] = (faceForward ? 1 : -1) * 80;
   proj.isSharp = true;
   return proj;
 }

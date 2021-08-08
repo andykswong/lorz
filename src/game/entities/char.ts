@@ -56,18 +56,6 @@ export class Character implements Body, Entity {
     this.shieldBroken = Math.max(0, this.shieldBroken - dt);
     this.sprite.isBlocking = !this.shieldBroken && !!(this._shield && (this.actions & Action.Block));
 
-    if (!this.sprite.isBlocking && !this.sprite.isHit && !this.sprite.isAttacking && (this.actions & Action.Attack)) {
-      this.sprite.attack(this.weapon?.speed);
-      this.sensors.push(this._weapon?.hitbox || HitBoxWeaponSmall);
-      if (this.weapon?.createProjectile) {
-        const proj = this.weapon.createProjectile(this.position, this.faceForward);
-        proj.initialVelocity[0] += this.velocity[0];
-        proj.initialVelocity[2] += this.velocity[2];
-        proj.owner = this;
-        this.projectile = proj;
-      }
-    }
-
     if (this.actions & Action.Left) {
       if (!(this.actions & Action.Right)) {
         this.sprite.faceForward = false;
@@ -78,6 +66,18 @@ export class Character implements Body, Entity {
 
     if (this.sprite.isHit) {
       return;
+    }
+
+    if (!this.sprite.isBlocking && !this.sprite.isAttacking && (this.actions & Action.Attack)) {
+      this.sprite.attack(this.weapon?.speed);
+      this.sensors.push(this._weapon?.hitbox || HitBoxWeaponSmall);
+      if (this.weapon?.createProjectile) {
+        const proj = this.weapon.createProjectile(this.position, this.faceForward);
+        proj.initialVelocity[0] += this.velocity[0];
+        proj.initialVelocity[2] += this.velocity[2];
+        proj.owner = this;
+        this.projectile = proj;
+      }
     }
 
     const drag = this.sprite.isBlocking ? .5 : 1;

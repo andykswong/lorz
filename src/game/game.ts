@@ -10,7 +10,7 @@ import { playSound } from './sound';
 import { SaveData } from './save';
 import { Spawner } from './spawn';
 
-const MAX_DIST = 128;
+const MAX_DIST = 160;
 const HERO_HEAL_INTERVAL = 3;
 
 const tmpVec3: Vec3 = vec3.create();
@@ -170,12 +170,23 @@ export class GameScreen implements Screen {
 
     if (a instanceof Projectile) {
       let damage = 0;
-      if (b instanceof Character && a.owner !== b) {
+      if (b instanceof Character && (a.owner?.isHero || false) !== b.isHero) {
         damage = b.weapon?.damage || b.attack;
-      } else if (b instanceof Projectile) {
+      } else if (b instanceof Projectile && (a.owner?.isHero || false) !== (b.owner?.isHero || false)) {
         damage = b.damage;
       }
       a.hitpoint -= damage;
+      if (a.hitpoint <= 0) {
+        const dir = a.position[0] < b.position[0] ? -1 : 1;
+        this.particles.submit(20, 0.3,
+          vec3.add(a.position, [-2, 3, -2]), vec3.add(a.position, [2, 5, 2]),
+          [dir < 0 ? -16 : -4, 0, -1], [dir < 0 ? 4 : 16, 6, 1],
+          a.hitColor
+        );
+        if (!(b instanceof Character)) {
+          playSound(a.isSharp ? 'Cut' : 'Hit');
+        }
+      }
     }
 
     if (a instanceof Character) {
@@ -192,7 +203,7 @@ export class GameScreen implements Screen {
         if (a instanceof Enemy && b instanceof Enemy) {
           damage = 0;
         }
-      } else if (b instanceof Projectile && !b.isDead && b.owner !== a) {
+      } else if (b instanceof Projectile && !b.isDead && (b.owner?.isHero || false) !== a.isHero) {
         effect = b.effect;
         pushBack = b.effect === Effect.Pushback ? 1.5 : 1;
         damage = b.damage;

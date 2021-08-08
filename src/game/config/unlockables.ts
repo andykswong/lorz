@@ -44,7 +44,7 @@ export const UnlockTable: HeroUnlocks[] = [
       { name: 'SHIELD', type: Unlockable.SHIELD, coins: 300, required: 0, exclude: SHIELDS | TWOHANDED },
       { name: 'SWORD', type: Unlockable.SWORD, coins: 600, required: 0, exclude: WEAPONS },
       { name: 'SHIELD', type: Unlockable.STEELSHIELD, coins: 900, required: Unlockable.SHIELD, exclude: SHIELDS | TWOHANDED },
-      { name: 'SPEAR', type: Unlockable.SPEAR, coins: 1500, required: 0, exclude: WEAPONS | SHIELDS },
+      { name: 'SPEAR', type: Unlockable.SPEAR, coins: 1800, required: 0, exclude: WEAPONS | SHIELDS },
       { name: 'ARMOR', type: Unlockable.ARMOR, coins: 2100, required: 0, exclude: ARMOR },
     ]
   },

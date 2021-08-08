@@ -38,10 +38,11 @@ export function defaultEnemyAction(enemy: Enemy, t: number, dt: number): void {
 
   let nextAction: Action = Action.None;
 
+  const ranged = enemy.weapon?.isRanged || false;
   const flee = enemy.hitpoint / enemy.maxHitPoint <= enemy.fleeThreshold;
   const distX = enemy.position[0] - (enemy.target ? enemy.target.position[0] : -100);
 
-  if (!enemy.target || enemy.target.isDead || (!flee && Math.abs(distX) > 48)) {
+  if (!enemy.target || enemy.target.isDead || (!flee && Math.abs(distX) > 64)) {
     if (Math.random() < 0.01 + ((enemy.actions & Action.Left) ? 0.05 : -0.04)) nextAction = nextAction | Action.Left;
     if (Math.random() < 0.01 + ((enemy.actions & Action.Right) ? 0.05 : -0.04)) nextAction = nextAction | Action.Right;
     if (Math.random() < 0.01 + ((enemy.actions & Action.Up) ? 0.05 : -0.04)) nextAction = nextAction | Action.Up;
@@ -63,13 +64,13 @@ export function defaultEnemyAction(enemy: Enemy, t: number, dt: number): void {
         nextAction = nextAction | Action.Block;
         enemy.lastBlockTime = t;
       }
-      if (Math.abs(distX) <= hitRangeX && Math.random() < enemy.aggressive) {
+      if (Math.abs(distX) <= (ranged ? 64 : hitRangeX) && Math.random() < enemy.aggressive) {
         nextAction = (nextAction & ~Action.Block) | Action.Attack;
         enemy.lastAttackTime = t;
       }
+      (enemy.faceForward && distX > 0) && (nextAction = nextAction | Action.Left);
+      (!enemy.faceForward && distX < 0) && (nextAction = nextAction | Action.Right);
     }
-    (enemy.faceForward && distX > 0) && (nextAction = nextAction | Action.Left);
-    (!enemy.faceForward && distX < 0) && (nextAction = nextAction | Action.Right);
   }
   
   if ((enemy.actions & Action.Block) && (t - enemy.lastBlockTime < enemy.blockDuration)) {
@@ -77,13 +78,21 @@ export function defaultEnemyAction(enemy: Enemy, t: number, dt: number): void {
   }
 
   if (flee) {
-    if (Math.abs(distX) < 196 && !(nextAction & Action.Block)) {
+    if (Math.abs(distX) < 196 && !(nextAction & (Action.Attack | Action.Block))) {
       nextAction = nextAction | (distX > 0 ? Action.Right : Action.Left);
     }
     nextAction = nextAction | (distZ > 0 ? Action.Down : Action.Up);
   } else {
     (Math.abs(distZ) > hitRangeZ) && (nextAction = nextAction | (distZ > 0 ? Action.Up : Action.Down));
-    (Math.abs(distX) > hitRangeX) && (nextAction = nextAction | (distX > 0 ? Action.Left : Action.Right));
+    if (!ranged) {
+      (Math.abs(distX) > hitRangeX) && (nextAction = nextAction | (distX > 0 ? Action.Left : Action.Right));
+    } else if (!(nextAction & Action.Attack)) {
+      if (Math.abs(distX) < 16) {
+        nextAction = nextAction | (distX > 0 ? Action.Right : Action.Left);
+      } else if (Math.abs(distX) > 48) {
+        nextAction = nextAction | (distX > 0 ? Action.Left : Action.Right);
+      }
+    }
   }
 
   enemy.actions = nextAction;

@@ -14,6 +14,10 @@ export class Weapon {
     public readonly createProjectile: ((position: ReadonlyVec3, faceForward: boolean) => Projectile) | null = null
   ) {
   }
+
+  public get isRanged(): boolean {
+    return !!this.createProjectile;
+  }
 }
 
 export class Armor {

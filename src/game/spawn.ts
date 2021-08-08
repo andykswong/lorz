@@ -1,5 +1,5 @@
 import { Body, zrandom } from '../core'; 
-import { createBat, createChest, createDemonSkeleton, createGoblin, createMinotaur, createMinotaur2, createRat, createSkeleton, createSkeleton2, createSlime, createSlime2, createSlime3, createSnake, createSpider, MAX, MIN } from './config';
+import { createBat, createChest, createDemonSkeleton, createGoblin, createMinotaur, createMinotaur2, createSkeletonArcher, createRat, createSkeleton, createSkeleton2, createSlime, createSlime2, createSlime3, createSnake, createSpider, MAX, MIN, createMinotaurArcher, createSkeletonMage } from './config';
 import { Character, Enemy, Entity } from './entities';
 
 const SPAWN_POINT = 32;
@@ -50,15 +50,17 @@ export class Spawner {
         const createSlimeFn = rand < 0.6 ? createSlime : rand < 0.85 ? createSlime2 : createSlime3;
         this.enemyList.push(createSlimeFn([zrandom(pos - 32, pos + 32), 0, zrandom(MIN[2], MAX[2])], hero));
         ++spawnCount;
-      } else if (Math.random() < 0.5 && zrandom(0, 40, END_POINT) > spawnId) {
-        const createSkel = Math.random() < 0.5 ? createSkeleton : createSkeleton2;
+      } else if (spawnId > 4 && Math.random() < 0.5 && zrandom(0, 40, END_POINT) > spawnId) {
+        const rand = Math.random();
+        const createSkel = rand < 0.35 ? createSkeleton : rand < 0.7 ? createSkeleton2 : rand < 0.9 ? createSkeletonArcher : createSkeletonMage;
         this.enemyList.push(createSkel([zrandom(pos - 32, pos + 32), 0, zrandom(MIN[2], MAX[2])], hero));
         ++spawnCount;
       } else if (spawnId > 16 && Math.random() < 0.4 && zrandom(0, 40, END_POINT) > spawnId) {
         this.enemyList.push(createSnake([zrandom(pos - 32, pos + 32), 0, zrandom(MIN[2], MAX[2])], hero));
         ++spawnCount;
       } else if (spawnId > 24 && Math.random() < 0.5 && zrandom(0, 56, END_POINT) > spawnId) {
-        const createMino = Math.random() < 0.5 ? createMinotaur : createMinotaur2;
+        const rand = Math.random();
+        const createMino = rand < 0.4 ? createMinotaur : rand < 0.8 ? createMinotaur2 : createMinotaurArcher;
         this.enemyList.push(createMino([zrandom(pos - 32, pos + 32), 0, zrandom(MIN[2], MAX[2])], hero));
         ++spawnCount;
       }
@@ -93,7 +95,8 @@ export class Spawner {
           break;
         case 3:
           for (let i = 0; i < 2 + multiplier; ++i) {
-            const createMino = Math.random() < 0.5 ? createMinotaur : createMinotaur2;
+            const rand = Math.random();
+            const createMino = rand < 0.4 ? createMinotaur : rand < 0.8 ? createMinotaur2 : createMinotaurArcher;
             this.enemyList.push(createMino([zrandom(spawnPosX - 18, spawnPosX + 18), 0, zrandom(MIN[2], MAX[2])], hero));
             ++spawnCount;
           }
@@ -101,12 +104,13 @@ export class Spawner {
         case 0:
           const skelCount = zrandom(6 + multiplier, 9 + multiplier * 1.5);
           for (let i = 0; i < skelCount; ++i) {
-            const createSkel = Math.random() < 0.5 ? createSkeleton : createSkeleton2;
+            const rand = Math.random();
+            const createSkel = rand < 0.4 ? createSkeleton : rand < 0.8 ? createSkeleton2 : rand < 0.9 ? createSkeletonArcher : createSkeletonMage;
             const pos = Math.random() < 0.5 ? spawnPosX : hero.position[0] - 32;
             this.enemyList.push(createSkel([zrandom(pos - 24, pos + 24), 0, zrandom(MIN[2], MAX[2])], hero));
             ++spawnCount;
           }
-          for (let i = 0; i < 1 + multiplier; ++i) {
+          for (let i = 0; i < multiplier; ++i) {
             this.enemyList.push(createDemonSkeleton([zrandom(spawnPosX - 8, spawnPosX + 8), 0, zrandom(MIN[2], MAX[2])], hero));
             ++spawnCount;
           }
