@@ -18,6 +18,7 @@ const tmpMat4: Mat4 = mat4.create();
 
 export class GameScreen implements Screen {
   private save: SaveData;
+  private heldCoins: number = 0;
   private coins: number = 0;
   public lost: boolean = false;
   public victory: boolean = false;
@@ -40,6 +41,7 @@ export class GameScreen implements Screen {
   private enemies: Enemy[] = [];
   private items: (Body & Entity)[] = [];
   private keyboardActions: Action = Action.None;
+  private gamePadActions: Action = Action.None;
 
   private entities: (Body & Entity)[] = [];
 
@@ -58,7 +60,7 @@ export class GameScreen implements Screen {
   }
 
   public get totalCoins(): number {
-    return Math.floor(Math.min(MAX_COINS, this.coins + this.save.coins));
+    return Math.floor(Math.min(MAX_COINS, this.coins + this.heldCoins));
   }
 
   public start(): void {
@@ -71,6 +73,7 @@ export class GameScreen implements Screen {
     this.init = true;
     this.lost = false;
     this.victory = false;
+    this.heldCoins = this.save.coins;
     this.coins = 0;
 
     playSound('Game');
@@ -102,6 +105,7 @@ export class GameScreen implements Screen {
 
     // Update
 
+    this.handleGamepad();
     this.checkEndGame();
 
     this.bg.update(x);
@@ -242,6 +246,17 @@ export class GameScreen implements Screen {
     return !!action;
   }
 
+  private handleGamepad(): void {
+    const actions = mapGamepadActions();
+    if (this.ended) {
+      if ((this.gamePadActions & Action.Attack) && !(actions & Action.Attack)) {
+        this.game.restart();
+      }
+    }
+
+    this.gamePadActions = actions;
+  }
+
   private checkEndGame(): void {
     let isEnd = false;
     if (!this.lost && this.hero.isDead) {
@@ -263,7 +278,7 @@ export class GameScreen implements Screen {
   }
 
   private updateEntities(t: number, dt: number): void {
-    this.hero.actions = this.keyboardActions | mapGamepadActions();
+    this.hero.actions = this.keyboardActions | this.gamePadActions;
     if (this.hero.projectile) {
       this.items.push(this.hero.projectile!);
       this.hero.projectile = null;
