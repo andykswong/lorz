@@ -131,7 +131,7 @@ export function createSpider(position: ReadonlyVec3 = ORIGIN, target: Character 
   return enemy;
 }
 
-export function createGoblin(position: ReadonlyVec3 = ORIGIN, target: Character | null = null, hp: number = 30): Enemy {
+export function createGoblin(position: ReadonlyVec3 = ORIGIN, target: Character | null = null, hp: number = 20): Enemy {
   const enemy = new Enemy(hp, Sprite.GOBLIN);
   enemy.target = target;
   enemy.shield = Weapons.MONEYBAG;
@@ -154,7 +154,7 @@ export function createSnake(position: ReadonlyVec3 = ORIGIN, target: Character |
   return enemy;
 }
 
-export function createSlime(position: ReadonlyVec3 = ORIGIN, target: Character | null = null, hp: number = 30): Enemy {
+export function createSlime(position: ReadonlyVec3 = ORIGIN, target: Character | null = null, hp: number = 20): Enemy {
   const enemy = new Enemy(30, Sprite.SLIME);
   enemy.target = target;
   enemy.attack = 2;
@@ -166,19 +166,19 @@ export function createSlime(position: ReadonlyVec3 = ORIGIN, target: Character |
   return enemy;
 }
 
-export function createSlime2(position: ReadonlyVec3 = ORIGIN, target: Character | null = null, hp: number = 40): Enemy {
+export function createSlime2(position: ReadonlyVec3 = ORIGIN, target: Character | null = null, hp: number = 30): Enemy {
   const enemy = createSlime(position, target, hp);
   enemy.sprite.body = Sprite.BLUESLIME;
   return enemy;
 }
 
-export function createSlime3(position: ReadonlyVec3 = ORIGIN, target: Character | null = null, hp: number = 50): Enemy {
+export function createSlime3(position: ReadonlyVec3 = ORIGIN, target: Character | null = null, hp: number = 40): Enemy {
   const enemy = createSlime(position, target, hp);
   enemy.sprite.body = Sprite.REDSLIME;
   return enemy;
 }
 
-export function createMinotaur(position: ReadonlyVec3 = ORIGIN, target: Character | null = null, hp: number = 100): Enemy {
+export function createMinotaur(position: ReadonlyVec3 = ORIGIN, target: Character | null = null, hp: number = 90): Enemy {
   const enemy = new Enemy(hp, Sprite.MINOTAUR);
   enemy.target = target;
   enemy.weapon = Weapons.GREATAXE;
@@ -191,14 +191,14 @@ export function createMinotaur(position: ReadonlyVec3 = ORIGIN, target: Characte
   return enemy;
 }
 
-export function createMinotaur2(position: ReadonlyVec3 = ORIGIN, target: Character | null = null, hp: number = 100): Enemy {
+export function createMinotaur2(position: ReadonlyVec3 = ORIGIN, target: Character | null = null, hp: number = 90): Enemy {
   const enemy = createMinotaur(position, target, hp);
   enemy.weapon = Weapons.DOUBLEAXE;
   enemy.shield = null;
   return enemy;
 }
 
-export function createSkeleton(position: ReadonlyVec3 = ORIGIN, target: Character | null = null, hp: number = 15): Enemy {
+export function createSkeleton(position: ReadonlyVec3 = ORIGIN, target: Character | null = null, hp: number = 25): Enemy {
   const enemy = new Enemy(hp, Sprite.SKELETON);
   enemy.target = target;
   enemy.weapon = Weapons.AXE;
@@ -211,14 +211,14 @@ export function createSkeleton(position: ReadonlyVec3 = ORIGIN, target: Characte
   return enemy;
 }
 
-export function createSkeleton2(position: ReadonlyVec3 = ORIGIN, target: Character | null = null, hp: number = 15): Enemy {
+export function createSkeleton2(position: ReadonlyVec3 = ORIGIN, target: Character | null = null, hp: number = 25): Enemy {
   const enemy = createSkeleton(position, target, hp);
   enemy.weapon = Weapons.KNIFE;
   enemy.shield = null;
   return enemy;
 }
 
-export function createDemonSkeleton(position: ReadonlyVec3 = ORIGIN, target: Character | null = null, hp: number = 50): Enemy {
+export function createDemonSkeleton(position: ReadonlyVec3 = ORIGIN, target: Character | null = null, hp: number = 70): Enemy {
   const enemy = new Enemy(hp, Sprite.DEMONSKELETON);
   enemy.target = target;
   enemy.weapon = Weapons.SWORD;

@@ -77,6 +77,8 @@ export class GameScreen implements Screen {
 
     this.enemies.length = 0;
     this.items.length = 0;
+
+    this.spawner.reset();
   }
 
   public pause(): void {
@@ -110,7 +112,7 @@ export class GameScreen implements Screen {
     }
 
     for (let i = 0; i < this.enemies.length;) {
-      if (this.enemies[i].isDead || this.hero.position[0] - this.enemies[i].position[0] > 256) {
+      if (this.enemies[i].isDead || this.hero.position[0] - this.enemies[i].position[0] > 128) {
         this.enemies[i] = this.enemies[this.enemies.length - 1];
         this.enemies.pop();
       } else {
