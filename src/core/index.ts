@@ -5,3 +5,4 @@ export * from './renderer';
 export * from './physics';
 export * from './particles';
 export * from './uirenderer';
+export * from './math';

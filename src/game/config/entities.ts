@@ -1,5 +1,5 @@
 import { ReadonlyVec3, ReadonlyVec4, vec3 } from 'munum';
-import { Character, Weapon } from '../entities';
+import { Character, Chest, Weapon } from '../entities';
 import { Enemy } from '../entities/enemy';
 import { Projectile } from '../entities/projectile';
 import { ORIGIN } from './config';
@@ -92,8 +92,15 @@ export function createHero(hero: Hero, unlock: Unlockable = 0, position: Readonl
   return char;
 }
 
-export function createRat(hp: number = 5, position: ReadonlyVec3 = ORIGIN): Enemy {
+export function createChest(position: ReadonlyVec3, min: number = 100, max: number = 200): Chest {
+  const chest = new Chest(min, max);
+  vec3.copy(position, chest.position);
+  return chest;
+}
+
+export function createRat(position: ReadonlyVec3 = ORIGIN, target: Character | null = null, hp: number = 5): Enemy {
   const enemy = new Enemy(hp, Sprite.RAT);
+  enemy.target = target;
   enemy.coins = 2;
   enemy.fleeThreshold = 0.5;
   enemy.speed = 12;
@@ -101,8 +108,9 @@ export function createRat(hp: number = 5, position: ReadonlyVec3 = ORIGIN): Enem
   return enemy;
 }
 
-export function createBat(hp: number = 7, position: ReadonlyVec3 = ORIGIN): Enemy {
+export function createBat(position: ReadonlyVec3 = ORIGIN, target: Character | null = null, hp: number = 7): Enemy {
   const enemy = new Enemy(hp, Sprite.BAT);
+  enemy.target = target;
   enemy.attack = 2;
   enemy.coins = 4;
   enemy.fleeThreshold = 0.5;
@@ -111,8 +119,9 @@ export function createBat(hp: number = 7, position: ReadonlyVec3 = ORIGIN): Enem
   return enemy;
 }
 
-export function createSpider(hp: number = 10, position: ReadonlyVec3 = ORIGIN): Enemy {
+export function createSpider(position: ReadonlyVec3 = ORIGIN, target: Character | null = null, hp: number = 10): Enemy {
   const enemy = new Enemy(hp, Sprite.SPIDER);
+  enemy.target = target;
   enemy.attack = 2;
   enemy.coins = 6;
   enemy.fleeThreshold = 0.5;
@@ -122,8 +131,20 @@ export function createSpider(hp: number = 10, position: ReadonlyVec3 = ORIGIN): 
   return enemy;
 }
 
-export function createSnake(hp: number = 10, position: ReadonlyVec3 = ORIGIN): Enemy {
+export function createGoblin(position: ReadonlyVec3 = ORIGIN, target: Character | null = null, hp: number = 30): Enemy {
+  const enemy = new Enemy(hp, Sprite.GOBLIN);
+  enemy.target = target;
+  enemy.shield = Weapons.MONEYBAG;
+  enemy.coins = Math.floor(hp + Math.random() * hp / 2);
+  enemy.fleeThreshold = 1;
+  enemy.speed = 24;
+  vec3.copy(position, enemy.position);
+  return enemy;
+}
+
+export function createSnake(position: ReadonlyVec3 = ORIGIN, target: Character | null = null, hp: number = 10): Enemy {
   const enemy = new Enemy(hp, Sprite.SNAKE);
+  enemy.target = target;
   enemy.attack = 3;
   enemy.coins = 10;
   enemy.fleeThreshold = 0;
@@ -133,8 +154,9 @@ export function createSnake(hp: number = 10, position: ReadonlyVec3 = ORIGIN): E
   return enemy;
 }
 
-export function createSlime(hp: number = 30, position: ReadonlyVec3 = ORIGIN): Enemy {
-  const enemy = new Enemy(hp, Sprite.SLIME);
+export function createSlime(position: ReadonlyVec3 = ORIGIN, target: Character | null = null, hp: number = 30): Enemy {
+  const enemy = new Enemy(30, Sprite.SLIME);
+  enemy.target = target;
   enemy.attack = 2;
   enemy.coins = 8;
   enemy.fleeThreshold = 0;
@@ -144,30 +166,21 @@ export function createSlime(hp: number = 30, position: ReadonlyVec3 = ORIGIN): E
   return enemy;
 }
 
-export function createSlime2(hp: number = 40, position: ReadonlyVec3 = ORIGIN): Enemy {
-  const enemy = createSlime(hp, position);
+export function createSlime2(position: ReadonlyVec3 = ORIGIN, target: Character | null = null, hp: number = 40): Enemy {
+  const enemy = createSlime(position, target, hp);
   enemy.sprite.body = Sprite.BLUESLIME;
   return enemy;
 }
 
-export function createSlime3(hp: number = 50, position: ReadonlyVec3 = ORIGIN): Enemy {
-  const enemy = createSlime(hp, position);
+export function createSlime3(position: ReadonlyVec3 = ORIGIN, target: Character | null = null, hp: number = 50): Enemy {
+  const enemy = createSlime(position, target, hp);
   enemy.sprite.body = Sprite.REDSLIME;
   return enemy;
 }
 
-export function createGoblin(hp: number = 30, position: ReadonlyVec3 = ORIGIN): Enemy {
-  const enemy = new Enemy(hp, Sprite.GOBLIN);
-  enemy.shield = Weapons.MONEYBAG;
-  enemy.coins = Math.floor(30 + Math.random() * 20);
-  enemy.fleeThreshold = 1;
-  enemy.speed = 24;
-  vec3.copy(position, enemy.position);
-  return enemy;
-}
-
-export function createMinotaur(hp: number = 70, position: ReadonlyVec3 = ORIGIN): Enemy {
+export function createMinotaur(position: ReadonlyVec3 = ORIGIN, target: Character | null = null, hp: number = 100): Enemy {
   const enemy = new Enemy(hp, Sprite.MINOTAUR);
+  enemy.target = target;
   enemy.weapon = Weapons.GREATAXE;
   enemy.shield = Weapons.STEELSHIELD;
   enemy.coins = 50;
@@ -178,35 +191,36 @@ export function createMinotaur(hp: number = 70, position: ReadonlyVec3 = ORIGIN)
   return enemy;
 }
 
-export function createMinotaur2(hp: number = 70, position: ReadonlyVec3 = ORIGIN): Enemy {
-  const enemy = createMinotaur(hp, position);
+export function createMinotaur2(position: ReadonlyVec3 = ORIGIN, target: Character | null = null, hp: number = 100): Enemy {
+  const enemy = createMinotaur(position, target, hp);
   enemy.weapon = Weapons.DOUBLEAXE;
   enemy.shield = null;
   return enemy;
 }
 
-export function createSkeleton(hp: number = 15, position: ReadonlyVec3 = ORIGIN): Enemy {
+export function createSkeleton(position: ReadonlyVec3 = ORIGIN, target: Character | null = null, hp: number = 15): Enemy {
   const enemy = new Enemy(hp, Sprite.SKELETON);
+  enemy.target = target;
   enemy.weapon = Weapons.AXE;
   enemy.shield = Weapons.SMALLSHIELD;
   enemy.coins = 10;
-  enemy.aggressive = 0.3;
   enemy.fleeThreshold = 0.5;
-  enemy.attackDelay = 2;
+  enemy.attackDelay = 1.5;
   enemy.speed = 8;
   vec3.copy(position, enemy.position);
   return enemy;
 }
 
-export function createSkeleton2(hp: number = 15, position: ReadonlyVec3 = ORIGIN): Enemy {
-  const enemy = createSkeleton(hp, position);
+export function createSkeleton2(position: ReadonlyVec3 = ORIGIN, target: Character | null = null, hp: number = 15): Enemy {
+  const enemy = createSkeleton(position, target, hp);
   enemy.weapon = Weapons.KNIFE;
   enemy.shield = null;
   return enemy;
 }
 
-export function createDemonSkeleton(hp: number = 30, position: ReadonlyVec3 = ORIGIN): Enemy {
+export function createDemonSkeleton(position: ReadonlyVec3 = ORIGIN, target: Character | null = null, hp: number = 50): Enemy {
   const enemy = new Enemy(hp, Sprite.DEMONSKELETON);
+  enemy.target = target;
   enemy.weapon = Weapons.SWORD;
   enemy.shield = Weapons.WOODENSHIELD;
   enemy.coins = 60;
@@ -218,7 +232,7 @@ export function createDemonSkeleton(hp: number = 30, position: ReadonlyVec3 = OR
   return enemy;
 }
 
-export function createArrow(position: ReadonlyVec3, faceForward: boolean): Projectile {
+export function createArrow(position: ReadonlyVec3, faceForward: boolean = true): Projectile {
   const proj = new Projectile(Sprite.ARROW);
   proj.lifeTime = 2;
   proj.damage = 4;
@@ -228,11 +242,20 @@ export function createArrow(position: ReadonlyVec3, faceForward: boolean): Proje
   return proj;
 }
 
-export function createFireball(position: ReadonlyVec3, faceForward: boolean): Projectile {
+export function createFireball(position: ReadonlyVec3, faceForward: boolean = true): Projectile {
   const proj = new Projectile(Sprite.FIREBALL);
   proj.damage = 6;
   vec3.copy(position, proj.position);
   proj.initialVelocity[0] = (faceForward ? 1 : -1) * 40;
+
+  return proj;
+}
+
+export function createIceball(position: ReadonlyVec3, faceForward: boolean = true): Projectile {
+  const proj = new Projectile(Sprite.ICEBALL);
+  proj.damage = 6;
+  vec3.copy(position, proj.position);
+  proj.initialVelocity[0] = (faceForward ? 1 : -1) * 32;
 
   return proj;
 }

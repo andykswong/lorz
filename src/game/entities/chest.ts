@@ -1,5 +1,5 @@
 import { Vec3, ReadonlyAABB } from 'munum';
-import { Body, SpritesRenderer } from '../../core';
+import { Body, SpritesRenderer, zrandom } from '../../core';
 import { HitBoxChar, Sprite } from '../config';
 import { Entity } from './entity';
 
@@ -11,7 +11,11 @@ export class Chest implements Body, Entity {
   public readonly sensors: ReadonlyAABB[] = [];
   public isDead: boolean = false;
   public isOpen: boolean = false;
-  public coins: number = Math.floor(30 + Math.random() * 170);
+  public coins: number;
+
+  public constructor(min: number = 100, max: number = 200) {
+    this.coins = zrandom(min, max);
+  }
 
   update(time: number): void {
   }

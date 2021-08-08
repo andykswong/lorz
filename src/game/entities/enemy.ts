@@ -62,7 +62,8 @@ export function defaultEnemyAction(enemy: Enemy, t: number, dt: number): void {
       )) {
         nextAction = nextAction | Action.Block;
         enemy.lastBlockTime = t;
-      } else if (Math.abs(distX) <= hitRangeX) {
+      }
+      if (Math.abs(distX) <= hitRangeX && Math.random() < enemy.aggressive) {
         nextAction = (nextAction & ~Action.Block) | Action.Attack;
         enemy.lastAttackTime = t;
       }
