@@ -5,6 +5,7 @@ Lorz = low rez :)
 ![Screenshot 2](./screenshots/2.png) 
 ![Screenshot 0](./screenshots/0.png) 
 ![Screenshot 1](./screenshots/1.png) 
+![Screenshot 3](./screenshots/3.png) 
 
 Authenticity:
 - LOWREZJAM 2021 requires 64x64 resolution. To fit the requirement, the game is rendered using WebGL with a 64x64 drawing buffer. The canvas is then upscaled to 256x256 using CSS, with style: ```image-rendering: crisp-edges; image-rendering: pixelated```;
