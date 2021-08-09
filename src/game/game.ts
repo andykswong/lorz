@@ -7,7 +7,7 @@ import { createHero, Hero, HIT_COLOR_VEC4, MAX_COINS, MIN, PUFF_COLOR, TEXT_COLO
 import { Character, Chest, Entity, Enemy, Projectile, Effect } from './entities';
 import { Action, mapGamepadActions, mapKeyToAction } from './action';
 import { playSound } from './sound';
-import { SaveData } from './save';
+import { GameSave } from './save';
 import { Spawner } from './spawn';
 
 const MAX_DIST = 160;
@@ -17,7 +17,7 @@ const tmpVec3: Vec3 = vec3.create();
 const tmpMat4: Mat4 = mat4.create();
 
 export class GameScreen implements Screen {
-  private save: SaveData;
+  private save: GameSave;
   private heldCoins: number = 0;
   private coins: number = 0;
   public lost: boolean = false;
@@ -40,10 +40,11 @@ export class GameScreen implements Screen {
   private heroHealTimer: number = 0;
   private enemies: Enemy[] = [];
   private items: (Body & Entity)[] = [];
+  private entities: (Body & Entity)[] = [];
+
   private keyboardActions: Action = Action.None;
   private gamePadActions: Action = Action.None;
 
-  private entities: (Body & Entity)[] = [];
 
   public constructor(public readonly game: LowRezJam2021Game) {
     this.save = game.save;
@@ -73,13 +74,11 @@ export class GameScreen implements Screen {
     this.init = true;
     this.lost = false;
     this.victory = false;
+    this.lastTime = 0;
     this.heldCoins = this.save.coins;
     this.coins = 0;
 
-    playSound('Game');
-
-    this.keyboardActions = Action.None;
-    this.hero = createHero(this.game.selectedHero, this.game.selectedUnlocks);
+    this.hero = createHero(this.game.save.hero, this.game.save.equipped);
     this.hero.position[0] = 1;
     this.heroHealTimer = 0;
 
@@ -87,6 +86,11 @@ export class GameScreen implements Screen {
     this.items.length = 0;
 
     this.spawner.reset();
+
+    this.keyboardActions = Action.None;
+    this.gamePadActions = Action.None;
+
+    playSound('Game');
   }
 
   public pause(): void {

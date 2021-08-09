@@ -1,3 +1,4 @@
+import { ReadonlyVec3 } from 'munum';
 import { Body, zrandom } from '../core'; 
 import { createBat, createChest, createDemonSkeleton, createGoblin, createMinotaur, createMinotaur2, createSkeletonArcher, createRat, createSkeleton, createSkeleton2, createSlime, createSlime2, createSlime3, createSnake, createSpider, MAX, MIN, createMinotaurArcher, createSkeletonMage } from './config';
 import { Character, Enemy, Entity } from './entities';
@@ -51,17 +52,13 @@ export class Spawner {
         this.enemyList.push(createSlimeFn([zrandom(pos - 32, pos + 32), 0, zrandom(MIN[2], MAX[2])], hero));
         ++spawnCount;
       } else if (spawnId > 4 && Math.random() < 0.5 && zrandom(0, 40, END_POINT) > spawnId) {
-        const rand = Math.random();
-        const createSkel = rand < 0.35 ? createSkeleton : rand < 0.7 ? createSkeleton2 : rand < 0.9 ? createSkeletonArcher : createSkeletonMage;
-        this.enemyList.push(createSkel([zrandom(pos - 32, pos + 32), 0, zrandom(MIN[2], MAX[2])], hero));
+        this.enemyList.push(skeletonFactory(spawnId)([zrandom(pos - 32, pos + 32), 0, zrandom(MIN[2], MAX[2])], hero));
         ++spawnCount;
       } else if (spawnId > 16 && Math.random() < 0.4 && zrandom(0, 40, END_POINT) > spawnId) {
         this.enemyList.push(createSnake([zrandom(pos - 32, pos + 32), 0, zrandom(MIN[2], MAX[2])], hero));
         ++spawnCount;
       } else if (spawnId > 24 && Math.random() < 0.5 && zrandom(0, 56, END_POINT) > spawnId) {
-        const rand = Math.random();
-        const createMino = rand < 0.4 ? createMinotaur : rand < 0.8 ? createMinotaur2 : createMinotaurArcher;
-        this.enemyList.push(createMino([zrandom(pos - 32, pos + 32), 0, zrandom(MIN[2], MAX[2])], hero));
+        this.enemyList.push(minotaurFactory(spawnId)([zrandom(pos - 32, pos + 32), 0, zrandom(MIN[2], MAX[2])], hero));
         ++spawnCount;
       }
     }
@@ -95,19 +92,15 @@ export class Spawner {
           break;
         case 3:
           for (let i = 0; i < 2 + multiplier; ++i) {
-            const rand = Math.random();
-            const createMino = rand < 0.4 ? createMinotaur : rand < 0.8 ? createMinotaur2 : createMinotaurArcher;
-            this.enemyList.push(createMino([zrandom(spawnPosX - 18, spawnPosX + 18), 0, zrandom(MIN[2], MAX[2])], hero));
+            this.enemyList.push(minotaurFactory(spawnId)([zrandom(spawnPosX - 18, spawnPosX + 18), 0, zrandom(MIN[2], MAX[2])], hero));
             ++spawnCount;
           }
           break;
         case 0:
           const skelCount = zrandom(6 + multiplier, 9 + multiplier * 1.5);
           for (let i = 0; i < skelCount; ++i) {
-            const rand = Math.random();
-            const createSkel = rand < 0.4 ? createSkeleton : rand < 0.8 ? createSkeleton2 : rand < 0.9 ? createSkeletonArcher : createSkeletonMage;
             const pos = Math.random() < 0.5 ? spawnPosX : hero.position[0] - 32;
-            this.enemyList.push(createSkel([zrandom(pos - 24, pos + 24), 0, zrandom(MIN[2], MAX[2])], hero));
+            this.enemyList.push(skeletonFactory(spawnId)([zrandom(pos - 24, pos + 24), 0, zrandom(MIN[2], MAX[2])], hero));
             ++spawnCount;
           }
           for (let i = 0; i < multiplier; ++i) {
@@ -122,4 +115,19 @@ export class Spawner {
   public reset(): void {
     this.maxSpawn = 0;
   }
+}
+
+function skeletonFactory(spawnId: number): (pos: ReadonlyVec3, target: Character) => Enemy {
+  const rand = Math.random();
+  const createSkel =
+    spawnId > 18 && rand < 0.1 ? createSkeletonMage :
+    spawnId > 12 && rand < 0.3 ? createSkeletonArcher :
+    rand < 0.65 ? createSkeleton : createSkeleton2;
+  return createSkel;
+}
+
+function minotaurFactory(spawnId: number): (pos: ReadonlyVec3, target: Character) => Enemy {
+  const rand = Math.random();
+  const createMino = rand < 0.4 ? createMinotaur : rand < 0.8 ? createMinotaur2 : createMinotaurArcher;
+  return createMino;
 }

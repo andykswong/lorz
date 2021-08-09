@@ -33,7 +33,7 @@ export function playSound(audio: keyof typeof Sound): void {
       Sound.Victory.pause();
       Sound.Game.loop = true;
       Sound.Game.currentTime = 0;
-      Sound.Game.volume = 0.1;
+      Sound.Game.volume = 0.2;
       Sound.Game.play();
       return;
     case 'Victory':
@@ -45,12 +45,12 @@ export function playSound(audio: keyof typeof Sound): void {
       return;
     case 'Footstep':
       Sound[audio].currentTime = 0;
-      Sound[audio].volume = 0.05;
+      Sound[audio].volume = 0.1;
       Sound[audio].play();
       return;
     case 'Coin':
       Sound[audio].currentTime = 0;
-      Sound[audio].volume = 0.1;
+      Sound[audio].volume = 0.2;
       Sound[audio].play();
       return;
   }

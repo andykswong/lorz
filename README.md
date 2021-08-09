@@ -1,5 +1,5 @@
 # DUNGEON OF LORZ - LOWREZJAM 2021 Submission
-Dungeon of Lorz is a 64x64 hack-n-slash game for [LOWREZJAM 2021](https://itch.io/jam/lowrezjam-2021). Collect coins in the dungeon, unlock upgrades, and delve into the dungeon again!
+Dungeon of Lorz is a 64x64 hack-n-slash game for [LOWREZJAM 2021](https://itch.io/jam/lowrezjam-2021). Collect coins in the dungeon, upgrade, and delve into the dungeon again!
 
 \* Lorz = low rez :) 
 
@@ -11,6 +11,14 @@ Dungeon of Lorz is a 64x64 hack-n-slash game for [LOWREZJAM 2021](https://itch.i
 Powered by:
 - [mugl](https://github.com/andykswong/mugl): Micro WebGL library.
 - [munum](https://github.com/andykswong/munum): Micro Numerical library.
+
+Features:
+- Fight against 16 enemy types and 4 miniboss encounters.
+- Spend coins to unlock additional characters and upgrades.
+  - **Knight:** You start with the good old knight. ​Can wield shield. Can upgrade to better weapon and armor.
+  - **Rogue:** Move and hit fast, but weaker. Can wield a bow.
+  - **Mage:** Low HP but high damage. Starts with a fire staff. Unlock the ice staff to freeze enemies. The priest mode gives you a short-ranged, high damage holy spell attack, with faster HP recovery.
+- Upgrades requires the character to be unlocked. The knight's steel shield also requires wooden shield to be unlocked first.
 
 Control:
 - WASD or arrow keys to move / select upgrades

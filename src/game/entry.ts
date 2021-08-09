@@ -1,13 +1,11 @@
 import { Game } from '../core';
-import { HEIGHT, Hero, Unlockable, WIDTH } from './config';
+import { HEIGHT, WIDTH } from './config';
 import { GameScreen } from './game';
-import { SaveData } from './save';
+import { GameSave } from './save';
 import { StartScreen } from './start';
 
 export class LowRezJam2021Game extends Game {
-  public save: SaveData = new SaveData();
-  public selectedHero: Hero = Hero.KNIGHT;
-  public selectedUnlocks: Unlockable = 0;
+  public readonly save: GameSave = new GameSave();
   private readonly startScreen = new StartScreen(this);
   private readonly gameScreen = new GameScreen(this);
 
@@ -18,7 +16,6 @@ export class LowRezJam2021Game extends Game {
   public start(): void {
     super.start();
     this.restart();
-    //this.startGame();
   }
 
   public restart(): void {

@@ -1,26 +1,33 @@
-import { Hero, Unlockable } from "./config";
+import { Hero, Unlockable } from './config';
 
-const STORAGE_PREFIX = 'andykswong/lowrezjam2021/'
-const COINS = STORAGE_PREFIX + 'coins';
-const HEROS = STORAGE_PREFIX + 'heros';
-const UNLOCKABLES = STORAGE_PREFIX + 'unlockables';
+const DATA_KEY = 'andykswong/lowrezjam2021/save';
 
-export class SaveData {
-  private _coins: number = 0;
-  private _hero: number = 1;
-  private _unlock: number = 0;
+interface SaveData {
+  coins: number;
+  unlockedHeroes: Hero;
+  unlockedUpgrades: Unlockable;
+  hero: Hero;
+  upgrades: Record<Hero, Unlockable>;
+}
+
+export class GameSave {
+  private data: SaveData;
 
   public constructor() {
+    this.data = {
+      coins: 0,
+      unlockedHeroes: Hero.KNIGHT,
+      unlockedUpgrades: 0,
+      hero: Hero.KNIGHT,
+      upgrades: {},
+    };
+
     try {
       if (window.localStorage) {
-        const coins = window.localStorage.getItem(COINS);
-        this.coins = (coins && parseInt(coins)) || this._coins;
-
-        const hero = window.localStorage.getItem(HEROS);
-        this._hero = (hero && parseInt(hero)) || this._hero;
-
-        const unlock = window.localStorage.getItem(UNLOCKABLES);
-        this._unlock = (unlock && parseInt(unlock)) || this._unlock;
+        const dataJson = window.localStorage.getItem(DATA_KEY);
+        if (dataJson) {
+          this.data = JSON.parse(dataJson);
+        }
       }
     } catch (e) {
       console.warn(e);
@@ -28,35 +35,57 @@ export class SaveData {
   }
 
   public get coins(): number {
-    return this._coins;
+    return this.data.coins;
   }
   
   public set coins(coins: number) {
-    this._coins = coins;
-    this.save(COINS, coins.toString());
+    this.data.coins = coins;
+    this.save();
   }
 
   public isHeroUnlocked(hero: Hero): boolean {
-    return (this._hero & hero) === hero;
+    return (this.data.unlockedHeroes & hero) === hero;
   }
   
-  public isUnlocked(unlockables: Unlockable): boolean {
-    return (this._unlock & unlockables) === unlockables;
-  }
-
   public unlockHero(hero: Hero): void {
-    this._hero = this._hero | hero;
-    this.save(HEROS, this._hero.toString());
-  }
-  
-  public unlock(unlockable: Unlockable): void {
-    this._unlock = this._unlock | unlockable;
-    this.save(UNLOCKABLES, this._unlock.toString());
+    this.data.unlockedHeroes = this.data.unlockedHeroes | hero;
+    this.save();
   }
 
-  private save(key: string, data: string): void {
+  public isUnlocked(unlockables: Unlockable): boolean {
+    return (this.data.unlockedUpgrades & unlockables) === unlockables;
+  }
+
+  public unlock(unlockable: Unlockable): void {
+    this.data.unlockedUpgrades = this.data.unlockedUpgrades | unlockable;
+    this.save();
+  }
+  
+  public equippedFor(hero: Hero): Unlockable {
+    return this.data.upgrades[hero] || 0;
+  }
+
+  public get hero(): Hero {
+    return this.data.hero;
+  }
+  
+  public set hero(hero: Hero) {
+    this.data.hero = hero;
+    this.save();
+  }
+
+  public get equipped(): Unlockable {
+    return this.equippedFor(this.hero);
+  }
+  
+  public set equipped(equipped: Unlockable) {
+    this.data.upgrades[this.data.hero] = equipped;
+    this.save();
+  }
+
+  private save(): void {
     try {
-      window.localStorage.setItem(key, data);
+      window.localStorage.setItem(DATA_KEY, JSON.stringify(this.data));
     } catch (e) {
       console.warn(e);
     }

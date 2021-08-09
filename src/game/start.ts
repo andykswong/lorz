@@ -5,7 +5,7 @@ import { Action, mapGamepadActions, mapKeyToAction } from './action';
 import { createHero, GREY_TEXT_COLOR, Hero, Sprite, TEXT_COLOR, UISprite, Unlockable, UnlockTable } from './config';
 import { Character } from './entities';
 import { LowRezJam2021Game } from './entry';
-import { SaveData } from './save';
+import { GameSave } from './save';
 import { playSound } from './sound';
 
 export class StartScreen implements Screen {
@@ -16,12 +16,10 @@ export class StartScreen implements Screen {
   private pass: RenderPass | null = null;
   private uiRenderer: UIRenderer;
   private renderer: SpritesRenderer;
-  private save: SaveData;
+  private save: GameSave;
 
-  private curretHero: number = 0;
-  private curretUnlock: number = 0;
-  private selectedHero: Hero = Hero.KNIGHT;
-  private selectedUnlocks: Unlockable = 0;
+  private currentHero: number = 0;
+  private currentUnlock: number = 0;
   private hero: Character = createHero(Hero.KNIGHT);
 
   private gamePadActions: Action = Action.None;
@@ -45,8 +43,8 @@ export class StartScreen implements Screen {
 
     playSound('Game');
 
-    this.curretHero = UnlockTable.reduce((idx, hero, currentIdx) => (hero.hero === this.selectedHero ? currentIdx : idx), 0);
-    this.curretUnlock = 0;
+    this.currentHero = UnlockTable.reduce((idx, hero, currentIdx) => (hero.hero === this.save.hero ? currentIdx : idx), 0);
+    this.currentUnlock = 0;
 
     this.updateHero();
   }
@@ -64,18 +62,18 @@ export class StartScreen implements Screen {
     this.uiRenderer.submitText('DUNGEON  OF  LORZ', [4, 16], TEXT_COLOR, 0, [1, 1.4]);
     this.uiRenderer.submitText('START - E', [18, 56], TEXT_COLOR, 0);
 
-    const currentHero = UnlockTable[this.curretHero];
-    if (!this.curretUnlock) {
+    const currentHero = UnlockTable[this.currentHero];
+    if (!this.currentUnlock) {
       if (this.save.isHeroUnlocked(currentHero.hero)) {
-        this.renderShopBtn();
+        this.renderShopBtn(currentHero.hero === this.save.hero);
       } else {
         this.renderBuyBtn();
       }
     } else {
-      const unlock = currentHero.unlocks[this.curretUnlock - 1];
+      const unlock = currentHero.unlocks[this.currentUnlock - 1];
       if (this.save.isUnlocked(unlock.type)) {
-        this.renderEquipBtn(
-          (!!(unlock.type & this.selectedUnlocks) && this.selectedHero === currentHero.hero) ||
+        this.renderShopBtn(
+          (!!(unlock.type & this.save.equipped) && this.save.hero === currentHero.hero) ||
           !this.save.isHeroUnlocked(currentHero.hero)
         );
       } else {
@@ -90,7 +88,7 @@ export class StartScreen implements Screen {
     this.uiRenderer.submit(UISprite.LEFT, [4, 32], [1, 1], TEXT_COLOR);
     this.uiRenderer.submit(UISprite.RIGHT, [56, 32], [1, 1], TEXT_COLOR);
 
-    const name = this.curretUnlock ? UnlockTable[this.curretHero].unlocks[this.curretUnlock - 1].name : UnlockTable[this.curretHero].name;
+    const name = this.currentUnlock ? UnlockTable[this.currentHero].unlocks[this.currentUnlock - 1].name : UnlockTable[this.currentHero].name;
     this.uiRenderer.submitText(name, [52, 34], TEXT_COLOR, 1);
 
     vec3.set(this.hero.position, -16, -7, 0);
@@ -144,61 +142,55 @@ export class StartScreen implements Screen {
 
   private act(action: Action): boolean {
     if (action === Action.Attack) {
-      this.game.selectedHero = this.selectedHero;
-      this.game.selectedUnlocks = this.selectedUnlocks;
       this.game.startGame();
       return true;
     }
 
     if (action === Action.Block) {
-      const hero = UnlockTable[this.curretHero].hero;
+      const hero = UnlockTable[this.currentHero].hero;
 
       if (this.canBuyCurrent()) {
-        if (!this.curretUnlock) {
-          this.save.unlockHero(this.selectedHero = hero);
-          this.save.coins = this.save.coins - UnlockTable[this.curretHero].coins;
-          this.selectedUnlocks = 0;
+        if (!this.currentUnlock) {
+          this.save.unlockHero(this.save.hero = hero);
+          this.save.coins = this.save.coins - UnlockTable[this.currentHero].coins;
         } else {
-          const unlock = UnlockTable[this.curretHero].unlocks[this.curretUnlock - 1];
-          if (this.selectedHero === hero) {
-            this.selectedUnlocks = this.selectedUnlocks & (~(unlock.exclude || 0));
-            this.selectedUnlocks = this.selectedUnlocks | unlock.type;
-          }
+          const unlock = UnlockTable[this.currentHero].unlocks[this.currentUnlock - 1];
           this.save.unlock(unlock.type);
           this.save.coins = this.save.coins - unlock.coins;
         }
       } else {
-        if (!this.curretUnlock) {
-          if (this.selectedHero !== hero && this.save.isHeroUnlocked(hero)) {
-            this.selectedHero = hero;
-            this.selectedUnlocks = 0;
+        if (!this.currentUnlock) {
+          if (this.save.isHeroUnlocked(hero)) {
+            this.save.hero = hero;
           }
         } else {
-          const unlock = UnlockTable[this.curretHero].unlocks[this.curretUnlock - 1];
+          const unlock = UnlockTable[this.currentHero].unlocks[this.currentUnlock - 1];
           if (this.save.isHeroUnlocked(hero) && this.save.isUnlocked(unlock.type)) {
-            this.selectedHero = hero;
-            this.selectedUnlocks = this.selectedUnlocks & (~(unlock.exclude || 0));
-            this.selectedUnlocks = this.selectedUnlocks ^ unlock.type;
+            let equipped = !!(this.save.equippedFor(hero) & unlock.type);
+            if (this.save.hero !== hero) {
+              this.save.hero = hero;
+              equipped = false;
+            }
+            this.save.equipped = this.save.equipped & (~(unlock.exclude || 0));
+            this.save.equipped = equipped ? (this.save.equipped & (~unlock.type)) : (this.save.equipped | unlock.type);
           }
         }
       }
     }
 
     if (action & Action.Right) {
-      this.curretHero = (this.curretHero + 1) % UnlockTable.length;
-      this.curretUnlock = 0;
-      this.selectedUnlocks = 0;
+      this.currentHero = (this.currentHero + 1) % UnlockTable.length;
+      this.currentUnlock = 0;
     }
     if (action & Action.Left) {
-      this.curretHero = (this.curretHero + UnlockTable.length - 1) % UnlockTable.length;
-      this.curretUnlock = 0;
-      this.selectedUnlocks = 0;
+      this.currentHero = (this.currentHero + UnlockTable.length - 1) % UnlockTable.length;
+      this.currentUnlock = 0;
     }
     if (action & Action.Up) {
-      this.curretUnlock = (this.curretUnlock + 1) % (UnlockTable[this.curretHero].unlocks.length + 1);
+      this.currentUnlock = (this.currentUnlock + 1) % (UnlockTable[this.currentHero].unlocks.length + 1);
     }
     if (action & Action.Down) {
-      this.curretUnlock = (this.curretUnlock + UnlockTable[this.curretHero].unlocks.length) % (UnlockTable[this.curretHero].unlocks.length + 1);
+      this.currentUnlock = (this.currentUnlock + UnlockTable[this.currentHero].unlocks.length) % (UnlockTable[this.currentHero].unlocks.length + 1);
     }
 
     this.updateHero();
@@ -207,11 +199,11 @@ export class StartScreen implements Screen {
   }
 
   private canBuyCurrent(): boolean {
-    const hero = UnlockTable[this.curretHero];
-    if (!this.curretUnlock) {
+    const hero = UnlockTable[this.currentHero];
+    if (!this.currentUnlock) {
       return !this.save.isHeroUnlocked(hero.hero) && this.save.coins >= hero.coins;
     } else {
-      const unlock = UnlockTable[this.curretHero].unlocks[this.curretUnlock - 1];
+      const unlock = UnlockTable[this.currentHero].unlocks[this.currentUnlock - 1];
       return this.save.isHeroUnlocked(hero.hero)
         && !this.save.isUnlocked(unlock.type)
         && this.save.isUnlocked(unlock.required || 0)
@@ -220,9 +212,9 @@ export class StartScreen implements Screen {
   }
 
   private renderBuyBtn(): void {
-    const coins = this.curretUnlock ?
-      UnlockTable[this.curretHero].unlocks[this.curretUnlock - 1].coins :
-      UnlockTable[this.curretHero].coins;
+    const coins = this.currentUnlock ?
+      UnlockTable[this.currentHero].unlocks[this.currentUnlock - 1].coins :
+      UnlockTable[this.currentHero].coins;
     const canBuy = this.canBuyCurrent();
     const color: ReadonlyVec4 = canBuy ? TEXT_COLOR : GREY_TEXT_COLOR;
     this.uiRenderer.submitText(';', [8, 42], TEXT_COLOR, 0);
@@ -231,24 +223,19 @@ export class StartScreen implements Screen {
     this.uiRenderer.submitText(coins.toString(), [42, 42], color, 0);
   }
 
-  private renderShopBtn(): void {
-    const selected = UnlockTable[this.curretHero].hero === this.selectedHero;
+  private renderShopBtn(selected: boolean): void {
     this.uiRenderer.submitText('; SHOP', [8, 42], TEXT_COLOR, 0);
     this.uiRenderer.submitText('USE - Q', [56, 42], selected ? GREY_TEXT_COLOR : TEXT_COLOR, 1);
   }
 
-  private renderEquipBtn(disabled: boolean = false): void {
-    this.uiRenderer.submitText(';', [15, 42], TEXT_COLOR, 0);
-    this.uiRenderer.submitText('EQUIP - Q', [20, 42], disabled ? GREY_TEXT_COLOR : TEXT_COLOR, 0);
-  }
-
   private updateHero(): void {
-    let unlocks = this.selectedUnlocks;
-    if (this.curretUnlock) {
-      const unlock = UnlockTable[this.curretHero].unlocks[this.curretUnlock - 1];
+    const hero = UnlockTable[this.currentHero];
+    let unlocks = this.save.equippedFor(hero.hero);
+    if (this.currentUnlock) {
+      const unlock = hero.unlocks[this.currentUnlock - 1];
       unlocks = unlocks & (~(unlock.exclude || 0));
       unlocks = unlocks | unlock.type;
     }
-    this.hero = createHero(UnlockTable[this.curretHero].hero, unlocks);
+    this.hero = createHero(hero.hero, unlocks);
   }
 }
