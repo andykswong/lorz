@@ -87,7 +87,7 @@ export class ParticlesRenderer {
   }
 
   public render(viewProj: ReadonlyMat4, time: number): void {
-    if (!this.instances) {
+    if (!this.instances.length) {
       return;
     }
 
