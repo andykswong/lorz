@@ -258,7 +258,7 @@ export class GameScreen implements Screen {
       return true;
     }
 
-    if (x >= 48) {
+    if (x >= 52) {
       this.mouseActions = this.mouseActions | Action.Attack;
       this.mouseMoving[i] = false;
     } else if (x >= 32) {
@@ -272,18 +272,18 @@ export class GameScreen implements Screen {
 
   public onPointerMove(x: number, y: number, i: number): boolean {
     if (!this.mouseMoving[i]) {
-      return false;
+      return true;
     }
 
     this.mouseActions = this.mouseActions & ~(Action.Up | Action.Down | Action.Left | Action.Right);
-    if (y < 16 + 16) {
+    if (y < 24) {
       this.mouseActions = this.mouseActions | Action.Up;
-    } else if (y >= 64 - 16) {
+    } else if (y >= 64-24) {
       this.mouseActions = this.mouseActions | Action.Down;
     }
-    if (x < 14) {
+    if (x < 12) {
       this.mouseActions = this.mouseActions | Action.Left;
-    } else if (x >= 32 - 14) {
+    } else {
       this.mouseActions = this.mouseActions | Action.Right;
     }
     return true;
@@ -291,7 +291,7 @@ export class GameScreen implements Screen {
 
   public onPointerUp(x: number, y: number, i: number): boolean {
     if (!(i in this.mouseMoving)) {
-      return false;
+      return true;
     }
 
     if (this.mouseMoving[i]) {

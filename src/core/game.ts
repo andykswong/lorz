@@ -57,20 +57,18 @@ export class Game {
     this.raf = requestAnimationFrame(render);
     window.addEventListener('keydown', this.keyDownListener);
     window.addEventListener('keyup', this.keyUpListener);
-    this.canvas.addEventListener('pointerdown', this.pointerDownListener);
-    this.canvas.addEventListener('pointerup', this.pointerUpListener);
-    this.canvas.addEventListener('pointerout', this.pointerUpListener);
-    this.canvas.addEventListener('pointermove', this.pointerMoveListener);
+    window.addEventListener('pointerdown', this.pointerDownListener);
+    window.addEventListener('pointerup', this.pointerUpListener);
+    window.addEventListener('pointermove', this.pointerMoveListener);
   }
 
   public pause(): void {
     cancelAnimationFrame(this.raf);
     window.removeEventListener('keydown', this.keyDownListener);
     window.removeEventListener('keyup', this.keyUpListener);
-    this.canvas.removeEventListener('pointerdown', this.pointerDownListener);
-    this.canvas.removeEventListener('pointerup', this.pointerUpListener);
-    this.canvas.removeEventListener('pointerout', this.pointerUpListener);
-    this.canvas.removeEventListener('pointermove', this.pointerMoveListener);
+    window.removeEventListener('pointerdown', this.pointerDownListener);
+    window.removeEventListener('pointerup', this.pointerUpListener);
+    window.removeEventListener('pointermove', this.pointerMoveListener);
   }
 
   public render(t: number): boolean | void {
