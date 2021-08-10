@@ -19,10 +19,10 @@ export class LowRezJam2021Game extends Game {
   }
 
   public restart(): void {
-    this.setScreen(this.startScreen);
+    this.screen = this.startScreen;
   }
 
   public startGame(): void {
-    this.setScreen(this.gameScreen);
+    this.screen = this.gameScreen;
   }
 }

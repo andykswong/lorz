@@ -42,6 +42,8 @@ export class GameScreen implements Screen {
   private items: (Body & Entity)[] = [];
   private entities: (Body & Entity)[] = [];
 
+  private mouseMoving: Record<number, boolean> = {};
+  private mouseActions: Action = Action.None;
   private keyboardActions: Action = Action.None;
   private gamePadActions: Action = Action.None;
 
@@ -62,6 +64,10 @@ export class GameScreen implements Screen {
 
   public get totalCoins(): number {
     return Math.floor(Math.min(MAX_COINS, this.coins + this.heldCoins));
+  }
+
+  public get actions(): Action {
+    return this.mouseActions | this.keyboardActions | this.gamePadActions;
   }
 
   public start(): void {
@@ -87,6 +93,8 @@ export class GameScreen implements Screen {
 
     this.spawner.reset();
 
+    this.mouseMoving = {};
+    this.mouseActions = Action.None;
     this.keyboardActions = Action.None;
     this.gamePadActions = Action.None;
 
@@ -244,6 +252,48 @@ export class GameScreen implements Screen {
     }
   };
 
+  public onPointerDown(x: number, y: number, i: number): boolean {
+    if (x >= 48) {
+      this.mouseActions = this.mouseActions | Action.Attack;
+    } else if (x >= 32) {
+      this.mouseActions = this.mouseActions | Action.Block;
+    } else {
+      this.mouseMoving[i] = true;
+    }
+    return true;
+  }
+
+  public onPointerMove(x: number, y: number, i: number): boolean {
+    if (!this.mouseMoving[i]) {
+      return false;
+    }
+
+    this.mouseActions = this.mouseActions & ~(Action.Up | Action.Down | Action.Left | Action.Right);
+    if (y < 16 + 16) {
+      this.mouseActions = this.mouseActions | Action.Up;
+    } else if (y >= 64 - 16) {
+      this.mouseActions = this.mouseActions | Action.Down;
+    }
+    if (x < 14) {
+      this.mouseActions = this.mouseActions | Action.Left;
+    } else if (x >= 32 - 14) {
+      this.mouseActions = this.mouseActions | Action.Right;
+    }
+    return true;
+  }
+
+  public onPointerUp(x: number, y: number, i: number): boolean {
+    if (this.mouseMoving[i]) {
+      this.mouseActions = this.mouseActions & ~(Action.Up | Action.Down | Action.Left | Action.Right);
+    } else {
+      this.mouseActions = this.mouseActions & ~(Action.Attack | Action.Block);
+    }
+
+    delete this.mouseMoving[i];
+
+    return true;
+  }
+
   public onKeyDown(key: string): boolean {
     const action: Action = mapKeyToAction(key);
     this.keyboardActions = this.keyboardActions | action;
@@ -293,7 +343,7 @@ export class GameScreen implements Screen {
   }
 
   private updateEntities(t: number, dt: number): void {
-    this.hero.actions = this.keyboardActions | this.gamePadActions;
+    this.hero.actions = this.actions;
     if (this.hero.projectile) {
       this.items.push(this.hero.projectile!);
       this.hero.projectile = null;

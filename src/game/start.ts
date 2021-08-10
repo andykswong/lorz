@@ -8,6 +8,13 @@ import { LowRezJam2021Game } from './entry';
 import { GameSave } from './save';
 import { playSound } from './sound';
 
+const LEFT_ARROW_COORD = [4, 32] as const;
+const RIGHT_ARROW_COORD = [56, 32] as const;
+const UPDOWN_ARROW_COORD = [8, 42] as const;
+const START_COORD = [18, 56] as const;
+const START_SIZE = [29, 5] as const;
+const BUY_RECT = [18, 42, 38, 5] as const;
+
 export class StartScreen implements Screen {
   private camera = new UICamera();
   private charCamera = new OrthoCamera();
@@ -60,7 +67,7 @@ export class StartScreen implements Screen {
     this.handleGamepad();
 
     this.uiRenderer.submitText('DUNGEON  OF  LORZ', [4, 16], TEXT_COLOR, 0, [1, 1.4]);
-    this.uiRenderer.submitText('START - E', [18, 56], TEXT_COLOR, 0);
+    this.uiRenderer.submitText('START - E', START_COORD, TEXT_COLOR, 0);
 
     const currentHero = UnlockTable[this.currentHero];
     if (!this.currentUnlock) {
@@ -85,8 +92,8 @@ export class StartScreen implements Screen {
     this.uiRenderer.submitText(text, [63, 1], TEXT_COLOR, 1);
     this.uiRenderer.submit(UISprite.COIN, [63 - text.length * 4 - 5, 1], [1, 1]);
 
-    this.uiRenderer.submit(UISprite.LEFT, [4, 32], [1, 1], TEXT_COLOR);
-    this.uiRenderer.submit(UISprite.RIGHT, [56, 32], [1, 1], TEXT_COLOR);
+    this.uiRenderer.submit(UISprite.LEFT, LEFT_ARROW_COORD, [1, 1], TEXT_COLOR);
+    this.uiRenderer.submit(UISprite.RIGHT, RIGHT_ARROW_COORD, [1, 1], TEXT_COLOR);
 
     const name = this.currentUnlock ? UnlockTable[this.currentHero].unlocks[this.currentUnlock - 1].name : UnlockTable[this.currentHero].name;
     this.uiRenderer.submitText(name, [52, 34], TEXT_COLOR, 1);
@@ -122,6 +129,35 @@ export class StartScreen implements Screen {
       return false;
     }
     return this.act(action);
+  }
+
+  public onPointerUp(x: number, y: number): boolean {
+    if (clickedWith(x, y, ...LEFT_ARROW_COORD, UISprite.LEFT[2], UISprite.LEFT[3])) {
+      this.act(Action.Left);
+      return true;
+    }
+
+    if (clickedWith(x, y, ...RIGHT_ARROW_COORD, UISprite.RIGHT[2], UISprite.RIGHT[3])) {
+      this.act(Action.Right);
+      return true;
+    }
+
+    if (clickedWith(x, y, ...START_COORD, ...START_SIZE)) {
+      this.act(Action.Attack);
+      return true;
+    }
+    
+    if (clickedWith(x, y, ...UPDOWN_ARROW_COORD, UISprite[';'][2] + 4, UISprite[';'][3])) {
+      this.act(Action.Up);
+      return true;
+    }
+        
+    if (clickedWith(x, y, ...BUY_RECT)) {
+      this.act(Action.Block);
+      return true;
+    }
+
+    return false;
   }
 
   private handleGamepad(): void {
@@ -217,14 +253,14 @@ export class StartScreen implements Screen {
       UnlockTable[this.currentHero].coins;
     const canBuy = this.canBuyCurrent();
     const color: ReadonlyVec4 = canBuy ? TEXT_COLOR : GREY_TEXT_COLOR;
-    this.uiRenderer.submitText(';', [8, 42], TEXT_COLOR, 0);
+    this.uiRenderer.submitText(';', UPDOWN_ARROW_COORD, TEXT_COLOR, 0);
     this.uiRenderer.submitText('BUY - Q', [13, 42], color, 0);
     this.uiRenderer.submit(UISprite.COIN, [36, 42], [1, 1], canBuy ? undefined : GREY_TEXT_COLOR);
     this.uiRenderer.submitText(coins.toString(), [42, 42], color, 0);
   }
 
   private renderShopBtn(selected: boolean): void {
-    this.uiRenderer.submitText('; SHOP', [8, 42], TEXT_COLOR, 0);
+    this.uiRenderer.submitText('; SHOP', UPDOWN_ARROW_COORD, TEXT_COLOR, 0);
     this.uiRenderer.submitText('USE - Q', [56, 42], selected ? GREY_TEXT_COLOR : TEXT_COLOR, 1);
   }
 
@@ -238,4 +274,8 @@ export class StartScreen implements Screen {
     }
     this.hero = createHero(hero.hero, unlocks);
   }
+}
+
+function clickedWith(x: number, y: number, rectX: number, rectY: number, rectWidth: number, rectHeight: number): boolean {
+  return (x >= rectX && x <= rectX + rectWidth && y >= rectY && y <= rectY + rectHeight);
 }
