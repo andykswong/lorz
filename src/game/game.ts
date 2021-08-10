@@ -253,10 +253,17 @@ export class GameScreen implements Screen {
   };
 
   public onPointerDown(x: number, y: number, i: number): boolean {
+    if (this.ended) {
+      this.game.restart();
+      return true;
+    }
+
     if (x >= 48) {
       this.mouseActions = this.mouseActions | Action.Attack;
+      this.mouseMoving[i] = false;
     } else if (x >= 32) {
       this.mouseActions = this.mouseActions | Action.Block;
+      this.mouseMoving[i] = false;
     } else {
       this.mouseMoving[i] = true;
     }
@@ -283,6 +290,10 @@ export class GameScreen implements Screen {
   }
 
   public onPointerUp(x: number, y: number, i: number): boolean {
+    if (!(i in this.mouseMoving)) {
+      return false;
+    }
+
     if (this.mouseMoving[i]) {
       this.mouseActions = this.mouseActions & ~(Action.Up | Action.Down | Action.Left | Action.Right);
     } else {

@@ -59,6 +59,7 @@ export class Game {
     window.addEventListener('keyup', this.keyUpListener);
     this.canvas.addEventListener('pointerdown', this.pointerDownListener);
     this.canvas.addEventListener('pointerup', this.pointerUpListener);
+    this.canvas.addEventListener('pointerout', this.pointerUpListener);
     this.canvas.addEventListener('pointermove', this.pointerMoveListener);
   }
 
@@ -68,6 +69,7 @@ export class Game {
     window.removeEventListener('keyup', this.keyUpListener);
     this.canvas.removeEventListener('pointerdown', this.pointerDownListener);
     this.canvas.removeEventListener('pointerup', this.pointerUpListener);
+    this.canvas.removeEventListener('pointerout', this.pointerUpListener);
     this.canvas.removeEventListener('pointermove', this.pointerMoveListener);
   }
 
