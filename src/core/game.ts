@@ -34,7 +34,7 @@ export class Game {
     container.appendChild(canvas);
 
     const device = getNGLDevice(canvas, {
-      powerPreference: 'low-power',
+      powerPreference: 'high-performance',
       antialias: false
     });
 

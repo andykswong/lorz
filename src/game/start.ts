@@ -2,7 +2,7 @@ import { RenderingDevice, RenderPass } from 'mugl';
 import { ReadonlyVec4, vec3 } from 'munum';
 import { OrthoCamera, Screen, SpritesRenderer, UICamera, UIRenderer } from '../core';
 import { Action, mapGamepadActions, mapKeyToAction } from './action';
-import { createHero, GREY_TEXT_COLOR, Hero, Sprite, TEXT_COLOR, UISprite, Unlockable, UnlockTable } from './config';
+import { createHero, GREY_TEXT_COLOR, Hero, Sprite, TEXT_COLOR, UISprite, UnlockTable } from './config';
 import { Character } from './entities';
 import { LowRezJam2021Game } from './entry';
 import { GameSave } from './save';
