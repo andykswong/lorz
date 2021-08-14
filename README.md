@@ -19,11 +19,18 @@ Features:
   - **Rogue:** Move and hit fast, but weaker. Can wield a bow.
   - **Mage:** Low HP but high damage. Starts with a fire staff. Unlock the ice staff to freeze enemies. The priest mode gives you a short-ranged, high damage holy spell attack, with faster HP recovery.
 - Upgrades requires the character to be unlocked. The knight's steel shield also requires wooden shield to be unlocked first.
+- Game is playable in with keyboard, gamepad, or touchscreen!
 
-Control:
+Keyboard Control:
 - WASD or arrow keys to move / select upgrades
 - E or Enter to attack / start / restart game
 - Q to block / buy / equip upgrades
+
+Click/Touch Controls:
+- Touch the arrows / text to navigate the shop menu / start
+- Touch and drag on the left half of screen to move
+- Touch and hold on the right half of screen to block / attack. This touch area is further split into 2 regions - touch the left side to block and right side to attack
+- Touch to go back to menu after dead
 
 Gamepad Support (only Xbox controller is tested):
 - Left stick to move / select upgrades
