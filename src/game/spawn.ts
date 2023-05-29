@@ -72,7 +72,7 @@ export class Spawner {
 
       const bossType = (spawnId / BIG_SPAWN_POINT) | 0;
       switch (bossType) {
-        case 1:
+        case 1: {
           this.enemyList.push(createSlime3([zrandom(spawnPosX - 4, spawnPosX + 4), 0, zrandom(MIN[2], MAX[2])], hero));
           ++spawnCount;
           const slimCount = zrandom(10 + multiplier, 15 + multiplier * 2);
@@ -83,20 +83,22 @@ export class Spawner {
             ++spawnCount;
           }
           break;
-        case 2:
+        }
+        case 2: {
           const snakeCount = 2 + (Math.random() < 0.5 ? 0 : 1) + multiplier;
           for (let i = 0; i < snakeCount; ++i) {
             this.enemyList.push(createSnake([zrandom(spawnPosX - 24, spawnPosX + 24), 0, zrandom(MIN[2], MAX[2])], hero));
             ++spawnCount;
           }
           break;
+        }
         case 3:
           for (let i = 0; i < 2 + multiplier; ++i) {
             this.enemyList.push(minotaurFactory(spawnId)([zrandom(spawnPosX - 18, spawnPosX + 18), 0, zrandom(MIN[2], MAX[2])], hero));
             ++spawnCount;
           }
           break;
-        case 0:
+        case 0: {
           const skelCount = zrandom(6 + multiplier, 9 + multiplier * 1.5);
           for (let i = 0; i < skelCount; ++i) {
             const pos = Math.random() < 0.5 ? spawnPosX : hero.position[0] - 32;
@@ -108,6 +110,7 @@ export class Spawner {
             ++spawnCount;
           }
           break;
+        }
       }
     }
   }
@@ -126,7 +129,7 @@ function skeletonFactory(spawnId: number): (pos: ReadonlyVec3, target: Character
   return createSkel;
 }
 
-function minotaurFactory(spawnId: number): (pos: ReadonlyVec3, target: Character) => Enemy {
+function minotaurFactory(_spawnId: number): (pos: ReadonlyVec3, target: Character) => Enemy {
   const rand = Math.random();
   const createMino = rand < 0.4 ? createMinotaur : rand < 0.8 ? createMinotaur2 : createMinotaurArcher;
   return createMino;

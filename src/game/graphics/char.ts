@@ -1,3 +1,4 @@
+import { Color } from 'mugl';
 import { ReadonlyVec4, vec3, Vec3 } from 'munum';
 import { SpritesRenderer } from '../../core';
 import { frame, FREEZE_COLOR, HIT_COLOR, WEAPON_OFFSET } from '../config';
@@ -41,7 +42,7 @@ export class CharacterSprite {
     }
 
     const dir = (this.faceForward ? 1 : -1);
-    const color: ReadonlyVec4 | undefined = this.isHit ?
+    const color: Color | undefined = this.isHit ?
       this.isFrozen ? [...FREEZE_COLOR, this.isHit] : [...HIT_COLOR, this.isHit * 2] : undefined;
     const body = (this.isWalking && !this.isDead) ? frame(this.body, t * 5) : this.body;
 

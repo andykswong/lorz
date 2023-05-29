@@ -4,13 +4,20 @@ import { GameScreen } from './game';
 import { GameSave } from './save';
 import { StartScreen } from './start';
 
-export class LowRezJam2021Game extends Game {
+export class DungeonOfLorzGame extends Game {
   public readonly save: GameSave = new GameSave();
   private readonly startScreen = new StartScreen(this);
   private readonly gameScreen = new GameScreen(this);
 
   public constructor() {
-    super(document.getElementById('game')!, WIDTH, HEIGHT);
+    const canvas = document.createElement('canvas');
+    canvas.width = WIDTH;
+    canvas.height = HEIGHT;
+    canvas.style.imageRendering = 'pixelated';
+    canvas.style.imageRendering = 'crisp-edges';
+    document.getElementById('game')?.appendChild(canvas);
+
+    super(canvas);
   }
 
   public start(): void {

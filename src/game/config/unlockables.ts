@@ -41,11 +41,11 @@ export const UnlockTable: HeroUnlocks[] = [
     hero: Hero.KNIGHT,
     coins: 0,
     unlocks: [
-      { name: 'SHIELD', type: Unlockable.SHIELD, coins: 300, required: 0, exclude: SHIELDS | TWOHANDED },
-      { name: 'SWORD', type: Unlockable.SWORD, coins: 600, required: 0, exclude: WEAPONS },
+      { name: 'SHIELD', type: Unlockable.SHIELD, coins: 300, required: 0 as Unlockable, exclude: SHIELDS | TWOHANDED },
+      { name: 'SWORD', type: Unlockable.SWORD, coins: 600, required: 0 as Unlockable, exclude: WEAPONS },
       { name: 'SHIELD', type: Unlockable.STEELSHIELD, coins: 900, required: Unlockable.SHIELD, exclude: SHIELDS | TWOHANDED },
-      { name: 'SPEAR', type: Unlockable.SPEAR, coins: 1800, required: 0, exclude: WEAPONS | SHIELDS },
-      { name: 'ARMOR', type: Unlockable.ARMOR, coins: 2100, required: 0, exclude: ARMOR },
+      { name: 'SPEAR', type: Unlockable.SPEAR, coins: 1800, required: 0 as Unlockable, exclude: WEAPONS | SHIELDS },
+      { name: 'ARMOR', type: Unlockable.ARMOR, coins: 2100, required: 0 as Unlockable, exclude: ARMOR },
     ]
   },
   {
@@ -53,8 +53,8 @@ export const UnlockTable: HeroUnlocks[] = [
     hero: Hero.ROGUE,
     coins: 3000,
     unlocks: [
-      { name: 'SWORD', type: Unlockable.SWORD, coins: 600, required: 0, exclude: WEAPONS },
-      { name: 'BOW', type: Unlockable.BOW, coins: 2100, required: 0, exclude: WEAPONS },
+      { name: 'SWORD', type: Unlockable.SWORD, coins: 600, required: 0 as Unlockable, exclude: WEAPONS },
+      { name: 'BOW', type: Unlockable.BOW, coins: 2100, required: 0 as Unlockable, exclude: WEAPONS },
     ]
   },
   {
@@ -62,8 +62,8 @@ export const UnlockTable: HeroUnlocks[] = [
     hero: Hero.MAGE,
     coins: 4500,
     unlocks: [
-      { name: 'ICESTAFF', type: Unlockable.ICESTAFF, coins: 2100, required: 0, exclude: WEAPONS | SHIELDS },
-      { name: 'PRIEST', type: Unlockable.PRIEST, coins: 2100, required: 0, exclude: ARMOR | WEAPONS | SHIELDS },
+      { name: 'ICESTAFF', type: Unlockable.ICESTAFF, coins: 2100, required: 0 as Unlockable, exclude: WEAPONS | SHIELDS },
+      { name: 'PRIEST', type: Unlockable.PRIEST, coins: 2100, required: 0 as Unlockable, exclude: ARMOR | WEAPONS | SHIELDS },
     ]
   },
 ];

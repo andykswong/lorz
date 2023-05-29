@@ -1,6 +1,6 @@
 import { ReadonlyVec3, ReadonlyVec4, Vec4 } from 'munum';
 
-export let UISprite: Record<string, ReadonlyVec4> = {
+export const UISprite: Record<string, ReadonlyVec4> = {
   HP: [0, 32, 1, 1],
   HPBG: [7, 32, 1, 2],
   MP: [8, 32, 8, 2],

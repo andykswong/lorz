@@ -1,10 +1,10 @@
-import { RenderingDevice, RenderPass } from 'mugl';
-import { ReadonlyVec4, vec3 } from 'munum';
+import { Color, Device, RenderPass, WebGL } from 'mugl';
+import { vec3 } from 'munum';
 import { OrthoCamera, Screen, SpritesRenderer, UICamera, UIRenderer } from '../core';
 import { Action, mapGamepadActions, mapKeyToAction } from './action';
-import { createHero, GREY_TEXT_COLOR, Hero, Sprite, TEXT_COLOR, UISprite, UnlockTable } from './config';
+import { createHero, GREY_TEXT_COLOR, Hero, Sprite, TEXT_COLOR, UISprite, Unlockable, UnlockTable } from './config';
 import { Character } from './entities';
-import { LowRezJam2021Game } from './entry';
+import { DungeonOfLorzGame } from './entry';
 import { GameSave } from './save';
 import { playSound } from './sound';
 
@@ -19,7 +19,7 @@ export class StartScreen implements Screen {
   private camera = new UICamera();
   private charCamera = new OrthoCamera();
   private init = false;
-  private device: RenderingDevice;
+  private device: Device;
   private pass: RenderPass | null = null;
   private uiRenderer: UIRenderer;
   private renderer: SpritesRenderer;
@@ -31,7 +31,7 @@ export class StartScreen implements Screen {
 
   private gamePadActions: Action = Action.None;
 
-  public constructor(public readonly game: LowRezJam2021Game) {
+  public constructor(public readonly game: DungeonOfLorzGame) {
     this.save = game.save;
     this.device = game.device;
     this.uiRenderer = new UIRenderer(this.device);
@@ -40,14 +40,13 @@ export class StartScreen implements Screen {
 
   public start(): void {
     if (!this.init) {
-      this.pass = this.device.pass({
-        clearColor: [0x47 / 0xFF, 0x2d / 0xFF, 0x3c / 0xFF, 1]
-      });
-      this.uiRenderer.init();
-      this.renderer.init();
+      this.pass = WebGL.createRenderPass(this.device, { clearColor: [0x47 / 0xFF, 0x2d / 0xFF, 0x3c / 0xFF, 1] });
+      this.uiRenderer.start();
+      this.renderer.start();
     }
     this.init = true;
 
+    // TODO: wait for click to play sound
     playSound('Game');
 
     this.currentHero = UnlockTable.reduce((idx, hero, currentIdx) => (hero.hero === this.save.hero ? currentIdx : idx), 0);
@@ -57,6 +56,7 @@ export class StartScreen implements Screen {
   }
 
   public pause(): void {
+    // TODO
   }
 
   public destroy(): void {
@@ -66,8 +66,8 @@ export class StartScreen implements Screen {
   public render(t: number): boolean | void {
     this.handleGamepad();
 
-    this.uiRenderer.submitText('DUNGEON  OF  LORZ', [4, 16], TEXT_COLOR, 0, [1, 1.4]);
-    this.uiRenderer.submitText('START - E', START_COORD, TEXT_COLOR, 0);
+    this.uiRenderer.submitText('DUNGEON  OF  LORZ', [4, 16], TEXT_COLOR as Color, 0, [1, 1.4]);
+    this.uiRenderer.submitText('START - E', START_COORD, TEXT_COLOR as Color, 0);
 
     const currentHero = UnlockTable[this.currentHero];
     if (!this.currentUnlock) {
@@ -89,14 +89,14 @@ export class StartScreen implements Screen {
     }
 
     const text = this.save.coins.toString();
-    this.uiRenderer.submitText(text, [63, 1], TEXT_COLOR, 1);
+    this.uiRenderer.submitText(text, [63, 1], TEXT_COLOR as Color, 1);
     this.uiRenderer.submit(UISprite.COIN, [63 - text.length * 4 - 5, 1], [1, 1]);
 
-    this.uiRenderer.submit(UISprite.LEFT, LEFT_ARROW_COORD, [1, 1], TEXT_COLOR);
-    this.uiRenderer.submit(UISprite.RIGHT, RIGHT_ARROW_COORD, [1, 1], TEXT_COLOR);
+    this.uiRenderer.submit(UISprite.LEFT, LEFT_ARROW_COORD, [1, 1], TEXT_COLOR as Color);
+    this.uiRenderer.submit(UISprite.RIGHT, RIGHT_ARROW_COORD, [1, 1], TEXT_COLOR as Color);
 
     const name = this.currentUnlock ? UnlockTable[this.currentHero].unlocks[this.currentUnlock - 1].name : UnlockTable[this.currentHero].name;
-    this.uiRenderer.submitText(name, [52, 34], TEXT_COLOR, 1);
+    this.uiRenderer.submitText(name, [52, 34], TEXT_COLOR as Color, 1);
 
     vec3.set(this.hero.position, -16, -7, 0);
     this.hero.actions = Action.Attack;
@@ -113,9 +113,8 @@ export class StartScreen implements Screen {
     this.renderer.submit(Sprite.WALL2, [4 * 8 - 36, 16, 0]);
     this.renderer.submit(Sprite.WALL3, [5 * 8 - 36, 16, 0]);
 
-    this.device
-      .render(this.pass!)
-      .end();
+    WebGL.beginRenderPass(this.device, this.pass as RenderPass);
+    WebGL.submitRenderPass(this.device);
 
     this.camera.updateProj();
     this.charCamera.updateProj();
@@ -242,7 +241,7 @@ export class StartScreen implements Screen {
       const unlock = UnlockTable[this.currentHero].unlocks[this.currentUnlock - 1];
       return this.save.isHeroUnlocked(hero.hero)
         && !this.save.isUnlocked(unlock.type)
-        && this.save.isUnlocked(unlock.required || 0)
+        && this.save.isUnlocked(unlock.required || 0 as Unlockable)
         && this.save.coins >= unlock.coins;
     }
   }
@@ -252,16 +251,16 @@ export class StartScreen implements Screen {
       UnlockTable[this.currentHero].unlocks[this.currentUnlock - 1].coins :
       UnlockTable[this.currentHero].coins;
     const canBuy = this.canBuyCurrent();
-    const color: ReadonlyVec4 = canBuy ? TEXT_COLOR : GREY_TEXT_COLOR;
-    this.uiRenderer.submitText(';', UPDOWN_ARROW_COORD, TEXT_COLOR, 0);
+    const color = canBuy ? TEXT_COLOR as Color : GREY_TEXT_COLOR as Color;
+    this.uiRenderer.submitText(';', UPDOWN_ARROW_COORD, TEXT_COLOR as Color, 0);
     this.uiRenderer.submitText('BUY - Q', [13, 42], color, 0);
-    this.uiRenderer.submit(UISprite.COIN, [36, 42], [1, 1], canBuy ? undefined : GREY_TEXT_COLOR);
+    this.uiRenderer.submit(UISprite.COIN, [36, 42], [1, 1], canBuy ? undefined : GREY_TEXT_COLOR as Color);
     this.uiRenderer.submitText(coins.toString(), [42, 42], color, 0);
   }
 
   private renderShopBtn(selected: boolean): void {
-    this.uiRenderer.submitText('; SHOP', UPDOWN_ARROW_COORD, TEXT_COLOR, 0);
-    this.uiRenderer.submitText('USE - Q', [56, 42], selected ? GREY_TEXT_COLOR : TEXT_COLOR, 1);
+    this.uiRenderer.submitText('; SHOP', UPDOWN_ARROW_COORD, TEXT_COLOR as Color, 0);
+    this.uiRenderer.submitText('USE - Q', [56, 42], selected ? GREY_TEXT_COLOR as Color : TEXT_COLOR as Color, 1);
   }
 
   private updateHero(): void {

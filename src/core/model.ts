@@ -1,9 +1,14 @@
+/** A renderable entity model. */
 export class Model {
-  public readonly indices: number[][] | null = null;
-  public readonly positions: number[][] | null = null;
-  public readonly uvs: number[][] | null = null;
+  constructor(
+  public readonly positions?: number[][],
+  public readonly uvs?: number[][],
+  public readonly indices?: number[][],
+  ) {
+  }
 }
 
+/** Converts a model to a vertex buffer array. */
 export function toVertices(model: Model): Float32Array {
   const positions = model.positions;
   const uvs = model.uvs;
@@ -36,6 +41,7 @@ export function toVertices(model: Model): Float32Array {
   return out;
 }
 
+/** Converts a model to an index buffer array. */
 export function toIndices(model: Model): Uint16Array {
   const indices = model.indices;
   if (!indices) {
@@ -50,7 +56,8 @@ export function toIndices(model: Model): Uint16Array {
   return out;
 }
 
-export const Quad: Model = {
+/** Model of a quad. */
+export const Quad = {
   positions: [
     [-0.5, 0.0], [+0.5, +0.0], [+0.5, +1.0], // first triangle
     [-0.5, 0.0], [+0.5, +1.0], [-0.5, +1.0]  // second triangle
@@ -59,9 +66,10 @@ export const Quad: Model = {
     [0.0, 1.0], [1.0, 1.0], [1.0, 0.0],
     [0.0, 1.0], [1.0, 0.0], [0.0, 0.0]
   ]
-} as Model;
+} satisfies Model;
 
-export const UIQuad: Model = {
+/** Model of a UI-space quad. */
+export const UIQuad = {
   positions: [
     [+0.0, 0.0], [+0.0, +1.0], [+1.0, +1.0], // first triangle
     [+0.0, 0.0], [+1.0, +1.0], [+1.0, +0.0]  // second triangle
@@ -70,4 +78,4 @@ export const UIQuad: Model = {
     [0.0, 0.0], [0.0, 1.0], [1.0, 1.0],
     [0.0, 0.0], [1.0, 1.0], [1.0, 0.0]
   ]
-} as Model;
+} satisfies Model;

@@ -12,7 +12,7 @@ export const Armors = {
   ROGUE: new Armor(Sprite.ROBINHOOD),
   MAGE: new Armor(Sprite.WIZARD),
   CRUSADER: new Armor(Sprite.CRUSADER, 1),
-  PRIEST: new Armor(Sprite.PRIEST, 0 , 1),
+  PRIEST: new Armor(Sprite.PRIEST, 0, 1),
 } as const;
 
 export const Weapons = {
@@ -63,9 +63,7 @@ const HeroStartWeapon: Record<Hero, Weapon> = {
   [Hero.MAGE]: Weapons.FIRESTAFF,
 };
 
-export function createHero(hero: Hero, unlock: Unlockable = 0, position: ReadonlyVec3 = ORIGIN): Character {
-  let char: Character;
-
+export function createHero(hero: Hero, unlock: Unlockable = 0 as Unlockable, position: ReadonlyVec3 = ORIGIN): Character {
   let cape = HeroCape[hero];
   let armor = HeroArmor[hero];
   if (unlock & Unlockable.ARMOR) {
@@ -75,9 +73,9 @@ export function createHero(hero: Hero, unlock: Unlockable = 0, position: Readonl
     cape = null;
   } else if (unlock & Unlockable.ICESTAFF) {
     cape = Sprite.CAPE1;
-  } 
+  }
 
-  char = new Character(
+  const char = new Character(
     HeroHP[hero],
     Sprite.HERO,
     armor,
@@ -176,7 +174,7 @@ export function createSnake(position: ReadonlyVec3 = ORIGIN, target: Character |
 }
 
 export function createSlime(position: ReadonlyVec3 = ORIGIN, target: Character | null = null, hp: number = 20): Enemy {
-  const enemy = new Enemy(30, Sprite.SLIME);
+  const enemy = new Enemy(hp, Sprite.SLIME);
   enemy.target = target;
   enemy.attack = 2;
   enemy.coins = 8;

@@ -1,9 +1,8 @@
-import { RenderingDevice } from 'mugl';
-import { getNGLDevice } from 'mugl/n';
+import { Device, WebGL } from 'mugl';
 
+/** A base game class. */
 export class Game {
-  public readonly canvas: HTMLCanvasElement;
-  public readonly device: RenderingDevice;
+  public readonly device: Device;
 
   private raf: number = 0;
   private _screen: Screen | null = null;
@@ -23,26 +22,15 @@ export class Game {
   private pointerMoveListener = pointerEvent(this, (x, y, i) => this._screen?.onPointerMove?.(x, y, i) || false);
 
   public constructor(
-    public readonly container: HTMLElement = document.body,
-    width: number, height: number
+    public readonly canvas: HTMLCanvasElement,
   ) {
-    const canvas = this.canvas = document.createElement('canvas');
-    canvas.width = width;
-    canvas.height = height;
-    canvas.style.imageRendering = 'pixelated';
-    canvas.style.imageRendering = 'crisp-edges';
-    container.appendChild(canvas);
-
-    const device = getNGLDevice(canvas, {
+    const device = WebGL.requestWebGL2Device(canvas, {
       powerPreference: 'high-performance',
       antialias: false
     });
 
     if (!device) {
       throw new Error('WebGL is unsupported');
-    }
-    if (!device.feature('ANGLE_instanced_arrays')) {
-      throw new Error('WebGL instancing (ANGLE_instanced_arrays) is unsupported');
     }
 
     this.device = device;
@@ -86,6 +74,7 @@ export class Game {
   }
 }
 
+/** A game screen. */
 export interface Screen {
   start(): void;
   pause(): void;

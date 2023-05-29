@@ -1,4 +1,4 @@
-import { LowRezJam2021Game } from './game';
+import { DungeonOfLorzGame } from './game';
 
-const game = new LowRezJam2021Game();
+const game = new DungeonOfLorzGame();
 game.start();

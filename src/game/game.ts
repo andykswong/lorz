@@ -1,9 +1,9 @@
-import { RenderingDevice } from 'mugl';
+import { Color, Device } from 'mugl';
 import { mat4, Mat4, translate, Vec3, vec3 } from 'munum';
 import { Body, simulate, OrthoCamera, ParticlesRenderer, Screen, SpritesRenderer, UIRenderer, UICamera } from '../core';
-import { Background } from './graphics';
-import { LowRezJam2021Game } from './entry';
 import { createHero, Hero, HIT_COLOR_VEC4, MAX_COINS, MIN, PUFF_COLOR, TEXT_COLOR, UISprite, Weapons } from './config';
+import { Background } from './graphics';
+import { DungeonOfLorzGame } from './entry';
 import { Character, Chest, Entity, Enemy, Projectile, Effect } from './entities';
 import { Action, mapGamepadActions, mapKeyToAction } from './action';
 import { playSound } from './sound';
@@ -26,7 +26,7 @@ export class GameScreen implements Screen {
   private init = false;
   private lastTime: number = 0;
 
-  private device: RenderingDevice;
+  private device: Device;
 
   private uiCamera = new UICamera();
   private camera = new OrthoCamera();
@@ -48,13 +48,13 @@ export class GameScreen implements Screen {
   private gamePadActions: Action = Action.None;
 
 
-  public constructor(public readonly game: LowRezJam2021Game) {
+  public constructor(public readonly game: DungeonOfLorzGame) {
     this.save = game.save;
     this.device = game.device;
-    this.bg = new Background(this.device);
     this.renderer = new SpritesRenderer(this.device, true);
     this.uiRenderer = new UIRenderer(this.device);
     this.particles = new ParticlesRenderer(this.device);
+    this.bg = new Background(this.device);
     this.spawner = new Spawner(this.enemies, this.items);
   }
 
@@ -72,10 +72,10 @@ export class GameScreen implements Screen {
 
   public start(): void {
     if (!this.init) {
-      this.bg.init();
-      this.renderer.init();
-      this.uiRenderer.init();
-      this.particles.init();
+      this.bg.start();
+      this.renderer.start();
+      this.uiRenderer.start();
+      this.particles.start();
     }
     this.init = true;
     this.lost = false;
@@ -102,6 +102,7 @@ export class GameScreen implements Screen {
   }
 
   public pause(): void {
+    // TODO
   }
 
   public destroy(): void {
@@ -146,7 +147,7 @@ export class GameScreen implements Screen {
 
   public renderUI(): void {
     const totalCoins = this.totalCoins.toString();
-    this.uiRenderer.submitText(totalCoins, [63, 1], TEXT_COLOR, 1);
+    this.uiRenderer.submitText(totalCoins, [63, 1], TEXT_COLOR as Color, 1);
     this.uiRenderer.submit(UISprite.COIN, [63 - totalCoins.length * 4 - 5, 1], [1, 1]);
 
     const hpBarWidth = 24;
@@ -156,22 +157,22 @@ export class GameScreen implements Screen {
 
     if (this.ended) {
       if (this.victory) {
-        this.uiRenderer.submitText('VICTORY!', [18, 28], TEXT_COLOR, 0);
+        this.uiRenderer.submitText('VICTORY!', [18, 28], TEXT_COLOR as Color, 0);
       } else if (this.lost) {
-        this.uiRenderer.submitText('YOU ARE DEAD!', [11, 28], TEXT_COLOR, 0);
+        this.uiRenderer.submitText('YOU ARE DEAD!', [11, 28], TEXT_COLOR as Color, 0);
       }
       const coins = Math.floor(Math.min(MAX_COINS, this.coins)).toString();
       const leftOffset = 17 - coins.length * 2;
-      this.uiRenderer.submitText('EARNED', [leftOffset, 36], TEXT_COLOR, 0);
+      this.uiRenderer.submitText('EARNED', [leftOffset, 36], TEXT_COLOR as Color, 0);
       this.uiRenderer.submit(UISprite.COIN, [leftOffset + 25, 36], [1, 1]);
-      this.uiRenderer.submitText(coins, [leftOffset + 31, 36], TEXT_COLOR);
+      this.uiRenderer.submitText(coins, [leftOffset + 31, 36], TEXT_COLOR as Color);
     }
 
     this.uiCamera.updateProj();
     this.uiRenderer.render(this.uiCamera.viewProj);
   }
 
-  public onCollide = (a: Body, b: Body, sensor: number): void => {
+  public onCollide = (a: Body, b: Body, _sensor: number): void => {
     if (a instanceof Chest && !a.isOpen) {
       if (b instanceof Character && b.isHero || b instanceof Projectile && b.owner?.isHero) {
         a.isOpen = true;
@@ -356,7 +357,7 @@ export class GameScreen implements Screen {
   private updateEntities(t: number, dt: number): void {
     this.hero.actions = this.actions;
     if (this.hero.projectile) {
-      this.items.push(this.hero.projectile!);
+      this.items.push(this.hero.projectile);
       this.hero.projectile = null;
     }
 
@@ -370,7 +371,7 @@ export class GameScreen implements Screen {
         this.enemies.pop();
       } else {
         if (enemy.projectile) {
-          this.items.push(enemy.projectile!);
+          this.items.push(enemy.projectile);
           enemy.projectile = null;
         }
         ++i;

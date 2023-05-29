@@ -1,6 +1,8 @@
 import * as path from 'path';
 import webpack from 'webpack';
 import CopyPlugin from 'copy-webpack-plugin';
+import ESLintPlugin from 'eslint-webpack-plugin';
+import TerserPlugin from 'terser-webpack-plugin';
 
 const PRODUCTION = 'production';
 
@@ -11,6 +13,7 @@ export const debug = process.env.DEBUG || !isProd;
 const ASSET_DIR = path.resolve('./assets');
 const OUTPUT_DIR = path.resolve('./dist');
 
+/** @type {import('webpack').Configuration} */
 export default {
   mode,
   entry: {
@@ -45,20 +48,45 @@ export default {
     extensions: [ '.js', '.mjs', '.ts' ],
   },
   optimization: {
-    minimize: isProd
+    minimize: isProd,
+    minimizer: [
+      new TerserPlugin({
+        terserOptions: {
+          ecma: 2015,
+          module: true,
+          toplevel: true,
+          compress: {
+            passes: 5,
+            drop_console: !debug
+          },
+          mangle: {
+            properties: false
+          }
+        },
+      }),
+    ],
   },
   plugins: [
-    new webpack.DefinePlugin({
-      MUGL_DEBUG: true,
+    new ESLintPlugin({
+      extensions: [ '.js', '.mjs', '.ts' ],
     }),
     new CopyPlugin({
       patterns: [
         { from: ASSET_DIR, to: OUTPUT_DIR }
       ],
-    })
+    }),
+    new webpack.EnvironmentPlugin({
+      'NODE_ENV': mode,
+      'MUGL_DEBUG': false,
+      'MUGL_FINALIZER': false,
+    }),
+    new webpack.DefinePlugin({
+      'MUGL_DEBUG': debug,
+      'MUGL_FINALIZER': false,
+    }),
   ],
-  devtool: isProd ? false : 'source-map',
+  devtool: isProd ? false : 'inline-source-map',
   devServer: {
-    contentBase: ASSET_DIR
+    static: ASSET_DIR
   }
 };

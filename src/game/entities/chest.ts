@@ -17,10 +17,11 @@ export class Chest implements Body, Entity {
     this.coins = zrandom(min, max);
   }
 
-  update(time: number): void {
+  update(_time: number): void {
+    // noop
   }
 
-  render(renderer: SpritesRenderer, time: number): void {
+  render(renderer: SpritesRenderer, _time: number): void {
     renderer.submit(this.isOpen ? Sprite.CHESTOPEN : Sprite.CHEST, this.position, -1, 1, [0, 0, 0, 0]);
   }
 }

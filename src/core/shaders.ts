@@ -1,17 +1,16 @@
-export const SPRITE_VS = `
+export const SPRITE_VS = `#version 300 es
 precision mediump float;
-uniform mat4 vp;
-
-attribute vec2 qpos;
-attribute vec2 uv;
-varying vec2 vUv;
-attribute vec3 position;
-attribute float dirAlpha;
-attribute vec4 quad;
-varying vec4 vQuad;
-attribute vec4 color;
-varying vec4 vColor;
-varying float alpha;
+layout(std140) uniform Data { mat4 vp; vec2 texSize; };
+layout(location=0) in vec2 qpos;
+layout(location=1) in vec2 uv;
+layout(location=2) in vec4 quad;
+layout(location=3) in vec3 position;
+layout(location=4) in float dirAlpha;
+layout(location=5) in vec4 color;
+out vec2 vUv;
+out vec4 vQuad;
+out vec4 vColor;
+out float alpha;
 
 void main () {
   vec3 local = vec3(qpos.x * quad.z, qpos.y * quad.w, 0.);
@@ -25,40 +24,37 @@ void main () {
 }
 `;
 
-export const SPRITE_FS = `
+export const SPRITE_FS = `#version 300 es
 precision mediump float;
-uniform vec2 texSize;
+layout(std140) uniform Data { mat4 vp; vec2 texSize; };
 uniform sampler2D tex;
+in vec2 vUv;
+in vec4 vQuad;
+in vec4 vColor;
+in float alpha;
+out vec4 outColor;
 
-varying vec2 vUv;
-varying vec4 vQuad;
-varying vec4 vColor;
-varying float alpha;
-
-void main () {
+void main() {
   vec2 uv = vec2((vQuad.x + clamp(vUv.x, 0.01, 0.99) * vQuad.z) / texSize.x, (vQuad.y + clamp(vUv.y, 0.01, 0.99) * vQuad.w) / texSize.y);
-  vec4 color = texture2D(tex, uv);
+  vec4 color = texture(tex, uv);
   if (color.a * alpha < 0.1) {
     discard;
   }
-  gl_FragColor = vec4(mix(color.rgb, vColor.rgb, vColor.a), color.a * alpha);
+  outColor = vec4(mix(color.rgb, vColor.rgb, vColor.a), color.a * alpha);
 }
 `;
 
-export const PARTICLE_VS = `
+export const PARTICLE_VS = `#version 300 es
 precision mediump float;
-uniform mat4 vp;
-uniform float time;
-
-attribute vec3 position;
-attribute vec3 velocity;
-attribute float lifetime;
-attribute vec4 color;
-varying vec4 vColor;
-
+layout(std140) uniform Data { mat4 vp; float time; };
+layout(location=0) in vec3 position;
+layout(location=1) in vec3 velocity;
+layout(location=2) in float lifetime;
+layout(location=3) in vec4 color;
+out vec4 vColor;
 const float PI = 3.14;
 
-void main () {
+void main() {
   float t = mod(time, lifetime);
   vColor = vec4(color.rgb, color.a * (1. - t / lifetime));
   vec3 pos = position + t * velocity + 0.5 * t * t * vec3(0, -10, 0);
@@ -67,30 +63,30 @@ void main () {
 }
 `;
 
-export const PARTICLE_FS = `
+export const PARTICLE_FS = `#version 300 es
 precision mediump float;
-varying vec4 vColor;
+in vec4 vColor;
+out vec4 outColor;
 
-void main () {
-  gl_FragColor = vColor;
+void main() {
+  outColor = vColor;
 }
 `;
 
-export const UI_VS = `
+export const UI_VS = `#version 300 es
 precision mediump float;
-uniform mat4 vp;
+layout(std140) uniform Data { mat4 vp; vec2 texSize; };
+layout(location=0) in vec2 qpos;
+layout(location=1) in vec2 uv;
+layout(location=2) in vec4 quad;
+layout(location=3) in vec2 position;
+layout(location=4) in vec2 scale;
+layout(location=5) in vec4 color;
+out vec2 vUv;
+out vec4 vQuad;
+out vec4 vColor;
 
-attribute vec2 qpos;
-attribute vec2 uv;
-varying vec2 vUv;
-attribute vec2 position;
-attribute vec2 scale;
-attribute vec4 quad;
-varying vec4 vQuad;
-attribute vec4 color;
-varying vec4 vColor;
-
-void main () {
+void main() {
   vec2 local = vec2(qpos.x * quad.z, qpos.y * quad.w) * scale;
   gl_Position = vp * vec4(local + position, 0., 1.);
   vUv = uv;
@@ -99,21 +95,21 @@ void main () {
 }
 `;
 
-export const UI_FS = `
+export const UI_FS = `#version 300 es
 precision mediump float;
-uniform vec2 texSize;
+layout(std140) uniform Data { mat4 vp; vec2 texSize; };
 uniform sampler2D tex;
+in vec2 vUv;
+in vec4 vQuad;
+in vec4 vColor;
+out vec4 outColor;
 
-varying vec2 vUv;
-varying vec4 vQuad;
-varying vec4 vColor;
-
-void main () {
+void main() {
   vec2 uv = vec2((vQuad.x + vUv.x * vQuad.z) / texSize.x, (vQuad.y + vUv.y * vQuad.w) / texSize.y);
-  vec4 color = texture2D(tex, uv);
+  vec4 color = texture(tex, uv);
   if (color.a < 0.1) {
     discard;
   }
-  gl_FragColor = vec4(mix(color.rgb, vColor.rgb, vColor.a), color.a);
+  outColor = vec4(mix(color.rgb, vColor.rgb, vColor.a), color.a);
 }
 `;

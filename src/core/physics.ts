@@ -1,6 +1,7 @@
 import { aabb, AABB, clamp, mat4, Mat4, ReadonlyAABB, translate, vec3, Vec3 } from 'munum';
 import { MAX, MIN } from '../game/config';
 
+/** A physics body. */
 export interface Body {
   readonly position: Vec3;
   readonly velocity: Vec3;
@@ -17,6 +18,7 @@ const tmpMat4B: Mat4 = mat4.create();
 const tmpAABBA: AABB = aabb.create();
 const tmpAABBB: AABB = aabb.create();
 
+/** Simulates a system of bodies for a fixed time interval. */
 export function simulate(dt: number, bodies: Body[], hit?: (target: Body, by: Body, sensor: number) => void): void {
   // Integrate and damp velocity
   for (const body of bodies) {
@@ -33,7 +35,7 @@ export function simulate(dt: number, bodies: Body[], hit?: (target: Body, by: Bo
   for (let i = 0; i < bodies.length; ++i) {
     aabb.transform(bodies[i].hitbox, translate(bodies[i].position, tmpMat4A), tmpAABBA);
     for (let j = 0; j < bodies.length; ++j) {
-      if (i == j) {
+      if (i === j) {
         continue;
       }
       for (let k = 0; k < bodies[j].sensors.length; ++k) {
@@ -50,6 +52,7 @@ export function simulate(dt: number, bodies: Body[], hit?: (target: Body, by: Bo
   }
 }
 
+/** Checks if 2 AABBs intersacts. */
 export function intersect(a: ReadonlyAABB, b: ReadonlyAABB): boolean {
   for (let i = 0; i < 3; ++i) {
     if (a.min[i] > b.max[i] || b.min[i] > a.max[i]) {

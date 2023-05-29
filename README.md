@@ -1,7 +1,9 @@
-# DUNGEON OF LORZ - LOWREZJAM 2021 Submission
-Dungeon of Lorz is a 64x64 hack-n-slash game for [LOWREZJAM 2021](https://itch.io/jam/lowrezjam-2021). Collect coins in the dungeon, upgrade, and delve into the dungeon again!
+# DUNGEON OF LORZ
+Dungeon of Lorz is a 64x64 hack-n-slash game, originally built for [LOWREZJAM 2021](https://itch.io/jam/lowrezjam-2021). Collect coins in the dungeon, upgrade, and delve into the dungeon again!
 
 \* Lorz = low rez :) 
+
+Original game jam submission is here: https://github.com/andykswong/lorz/releases/tag/lowrezjam2021v2
 
 ![Screenshot 2](./screenshots/2.png) 
 ![Screenshot 0](./screenshots/0.png) 

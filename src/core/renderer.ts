@@ -1,132 +1,159 @@
-import { AddressMode, BlendFactor, Buffer, CompareFunc, FilterMode, MinFilterMode, Pipeline, ReadonlyColor, RenderingDevice, RenderPass, ShaderType, Texture, UniformFormat, UniformType, Usage, VertexFormat } from 'mugl';
-import { array, ReadonlyMat4, ReadonlyVec3, ReadonlyVec4 } from 'munum';
+import { AddressMode, BindGroup, BindingType, BlendFactor, Buffer, BufferUsage, Color, CompareFunction, Device, FilterMode, RenderPass, RenderPipeline, Sampler, ShaderStage, Texture, VertexFormat, WebGL, vertexBufferLayouts } from 'mugl';
+import { ReadonlyMat4, ReadonlyVec3, ReadonlyVec4, mat } from 'munum';
 import { toVertices, Quad } from './model';
 import { SPRITE_FS, SPRITE_VS } from './shaders';
 
-const COLOR_NONE: ReadonlyColor = [0, 0, 0, 0];
+const COLOR_NONE: Color = [0, 0, 0, 0];
 const QUAT_VERT = toVertices(Quad);
 
 export const COMPONENTS_PER_SPRITE = 12;
 
+/** A sprite renderer. */
 export class SpritesRenderer {
-  private pipeline: Pipeline | null = null;
   private pass: RenderPass | null = null;
+  private pipeline: RenderPipeline | null = null;
+  private bindGroup: BindGroup | null = null;
   private buffer: Buffer | null = null;
   private instBuffer: Buffer | null = null;
+  private dataBuffer: Buffer | null = null;
   private tex: Texture | null = null;
+  private sampler: Sampler | null = null;
+
+  private readonly data: Float32Array;
+  private readonly uniformData: Float32Array = new Float32Array(20);
+
   private _init = false;
-  private data: Float32Array;
   protected i = 0;
 
   public constructor(
-    private readonly device: RenderingDevice,
+    private readonly device: Device,
     private writeDepth = false,
-    private clearColor: ReadonlyVec4 | null = null,
-    private max = 8 * 8 * 5
+    private clearColor?: Color,
+    private readonly sprite: TexImageSource = document.getElementById('sprites') as TexImageSource,
+    private max = 8 * 8 * 5,
   ) {
     this.data = new Float32Array(COMPONENTS_PER_SPRITE * max);
   }
-  
-  public init(): void {
+
+  /** Starts this renderer. */
+  public start(): void {
     if (this._init) {
       return;
     }
-    this._init = true;
 
-    this.buffer = this.device.buffer({
-      size: QUAT_VERT.byteLength
-    }).data(QUAT_VERT);
-    
-    this.instBuffer = this.device.buffer({
-      usage: Usage.Stream,
-      size: this.data.byteLength
+    this.pass = WebGL.createRenderPass(this.device,
+      { clearColor: this.clearColor, clearDepth: this.clearColor ? 1 : NaN });
+
+    const vertex = WebGL.createShader(this.device, { code: SPRITE_VS, usage: ShaderStage.Vertex });
+    const fragment = WebGL.createShader(this.device, { code: SPRITE_FS, usage: ShaderStage.Fragment });
+
+    const layout = WebGL.createBindGroupLayout(this.device, {
+      entries: [
+        { label: 'Data', type: BindingType.Buffer, binding: 0 },
+        { label: 'tex', type: BindingType.Texture, binding: 1 },
+        { label: 'tex', type: BindingType.Sampler, binding: 2 },
+      ]
     });
 
-    this.tex = this.device.texture({
-      width: 128,
-      height: 64
-    }, {
-      wrapU: AddressMode.Clamp,
-      wrapV: AddressMode.Clamp,
-      minFilter: MinFilterMode.Nearest,
+    this.pipeline = WebGL.createRenderPipeline(this.device, {
+      vertex,
+      fragment,
+      buffers: vertexBufferLayouts([
+        { attributes: [ /* qpos */ VertexFormat.F32x2, /* uv */ VertexFormat.F32x2] },
+        {
+          instanced: true, attributes: [
+          /* quad */ VertexFormat.F32x4,
+          /* position */ VertexFormat.F32x3,
+          /* dirAlpha */ VertexFormat.F32,
+          /* color */ VertexFormat.F32x4,
+          ]
+        },
+      ]),
+      bindGroups: [layout],
+      depthStencil: this.writeDepth ? {
+        depthWrite: true,
+        depthCompare: CompareFunction.LessEqual,
+      } : void 0,
+      targets: {
+        blendColor: { srcFactor: BlendFactor.SrcAlpha, dstFactor: BlendFactor.OneMinusSrcAlpha },
+        blendAlpha: { srcFactor: BlendFactor.One, dstFactor: BlendFactor.OneMinusSrcAlpha },
+      },
+    });
+
+    vertex.destroy();
+    fragment.destroy();
+    layout.destroy();
+
+    this.buffer = WebGL.createBuffer(this.device,
+      { size: QUAT_VERT.byteLength, usage: BufferUsage.Vertex });
+    WebGL.writeBuffer(this.device, this.buffer, QUAT_VERT);
+    this.instBuffer = WebGL.createBuffer(this.device,
+      { size: this.data.byteLength, usage: BufferUsage.Vertex | BufferUsage.Stream });
+    this.dataBuffer = WebGL.createBuffer(this.device,
+      { size: this.uniformData.byteLength, usage: BufferUsage.Uniform | BufferUsage.Stream });
+
+    this.tex = WebGL.createTexture(this.device, { size: [this.sprite.width, this.sprite.height, 1] });
+    this.sampler = WebGL.createSampler(this.device, {
+      addressModeU: AddressMode.ClampToEdge,
+      addressModeV: AddressMode.ClampToEdge,
+      minFilter: FilterMode.Nearest,
       magFilter: FilterMode.Nearest
-    }).data({
-      image: document.getElementById('sprites') as TexImageSource
     });
+    WebGL.copyExternalImageToTexture(this.device, { src: this.sprite }, { texture: this.tex });
 
-    const vert = this.device.shader({ type: ShaderType.Vertex, source: SPRITE_VS });
-    const frag = this.device.shader({ type: ShaderType.Fragment, source: SPRITE_FS });
+    this.bindGroup = WebGL.createBindGroup(this.device, { layout, entries: [
+      { buffer: this.dataBuffer },
+      { texture: this.tex },
+      { sampler: this.sampler }, 
+    ] });
 
-    this.pipeline = this.device.pipeline({
-      vert,
-      frag,
-      buffers: [{
-        attrs: [
-          { name: 'qpos', format: VertexFormat.Float2 },
-          { name: 'uv', format: VertexFormat.Float2 }
-        ]
-      }, {
-        attrs: [
-          { name: 'quad', format: VertexFormat.Float4 },
-          { name: 'position', format: VertexFormat.Float3 },
-          { name: 'dirAlpha', format: VertexFormat.Float },
-          { name: 'color', format: VertexFormat.Float4 }
-        ],
-        instanced: true
-      }],
-      uniforms: [
-        { name: 'vp', valueFormat: UniformFormat.Mat4 },
-        { name: 'tex', type: UniformType.Tex, texType: this.tex!.props.type },
-        { name: 'texSize', valueFormat: UniformFormat.Vec2 },
-      ],
-      depth: this.writeDepth ? {
-        write: true,
-        compare: CompareFunc.LEqual
-      } : null,
-      blend: {
-        srcFactorRGB: BlendFactor.SrcAlpha,
-        dstFactorRGB: BlendFactor.OneMinusSrcAlpha,
-        srcFactorAlpha: BlendFactor.One,
-        dstFactorAlpha: BlendFactor.OneMinusSrcAlpha,
-      }
-    })
-
-    vert.destroy();
-    frag.destroy();
-
-    this.pass = this.device.pass({
-      clearColor: this.clearColor,
-      clearDepth: this.clearColor ? 1 : NaN
-    });
+    this._init = true;
   }
 
-  public submit(quad: ReadonlyVec4, pos: ReadonlyVec3, rotation: number = 1, alpha: number = 1, color: ReadonlyColor = COLOR_NONE): void {
+  /** Destroys this renderer. */
+  public destroy() {
+    this.pass?.destroy();
+    this.pipeline?.destroy();
+    this.bindGroup?.destroy();
+    this.buffer?.destroy();
+    this.instBuffer?.destroy();
+    this.dataBuffer?.destroy();
+    this.tex?.destroy();
+    this.sampler?.destroy();
+    this._init = false;
+  }
+
+  /** Submits a sprite to be rendered. */
+  public submit(quad: ReadonlyVec4, pos: ReadonlyVec3, rotation: number = 1, alpha: number = 1, color: Color = COLOR_NONE): void {
     if (this.i + COMPONENTS_PER_SPRITE >= this.max * COMPONENTS_PER_SPRITE) {
-      console.error('Buffer overflow');
+      throw new RangeError('Buffer overflow');
     }
-    array.copy(quad, this.data, 0, this.i, 4); this.i += 4;
-    array.copy(pos, this.data, 0, this.i, 3); this.i += 3;
+    mat.copy(quad, this.data, 0, this.i, 4); this.i += 4;
+    mat.copy(pos, this.data, 0, this.i, 3); this.i += 3;
     this.data[this.i++] = Math.sign(rotation) * (alpha || 0.001);
-    array.copy(color, this.data, 0, this.i, 4); this.i += 4;
+    mat.copy(color, this.data, 0, this.i, 4); this.i += 4;
   }
 
+  /** Renders the queued sprites. */
   public render(viewProj: ReadonlyMat4): void {
     if (!this.i) {
       return;
     }
 
-    this.instBuffer!.data(this.data);
-    this.device.render(this.pass!)
-      .pipeline(this.pipeline!)
-      .vertex(0, this.buffer!)
-      .vertex(1, this.instBuffer!)
-      .uniforms([
-        { name: 'vp', values: viewProj },
-        { name: 'tex', tex: this.tex },
-        { name: 'texSize', values: [this.tex!.props.width, this.tex!.props.height] },
-      ])
-      .draw(Quad.positions!.length, this.i / COMPONENTS_PER_SPRITE)
-      .end();
+    WebGL.writeBuffer(this.device, this.instBuffer as Buffer, this.data);
+    this.uniformData.set(viewProj);
+    this.uniformData[16] = this.sprite.width;
+    this.uniformData[17] = this.sprite.height;
+    WebGL.writeBuffer(this.device, this.dataBuffer as Buffer, this.uniformData);
+
+    WebGL.beginRenderPass(this.device, this.pass as RenderPass);
+    WebGL.setRenderPipeline(this.device, this.pipeline as RenderPipeline);
+    WebGL.setVertex(this.device, 0, this.buffer as Buffer);
+    WebGL.setVertex(this.device, 1, this.instBuffer as Buffer);
+    WebGL.setBindGroup(this.device, 0, this.bindGroup as BindGroup);
+    WebGL.draw(this.device, Quad.positions.length, this.i / COMPONENTS_PER_SPRITE);
+    WebGL.submitRenderPass(this.device);
+
     this.i = 0;
   }
 }

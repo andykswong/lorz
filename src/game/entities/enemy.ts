@@ -34,8 +34,6 @@ export class Enemy extends Character {
 }
 
 export function defaultEnemyAction(enemy: Enemy, t: number, dt: number): void {
-  enemy.target = enemy.target;
-
   let nextAction: Action = Action.None;
 
   const ranged = enemy.weapon?.isRanged || false;

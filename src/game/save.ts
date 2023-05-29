@@ -17,10 +17,10 @@ export class GameSave {
     this.data = {
       coins: 0,
       unlockedHeroes: Hero.KNIGHT,
-      unlockedUpgrades: 0,
+      unlockedUpgrades: 0 as Unlockable,
       hero: Hero.KNIGHT,
       upgrades: {},
-    };
+    } as SaveData;
 
     try {
       if (window.localStorage) {
@@ -30,7 +30,7 @@ export class GameSave {
         }
       }
     } catch (e) {
-      console.warn(e);
+      console.warn('failed to load save data', e);
     }
   }
 
@@ -87,7 +87,7 @@ export class GameSave {
     try {
       window.localStorage.setItem(DATA_KEY, JSON.stringify(this.data));
     } catch (e) {
-      console.warn(e);
+      console.warn('failed to load', e);
     }
   }
 }
